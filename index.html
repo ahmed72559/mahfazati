@@ -640,10 +640,17 @@
   <div class="card">
     <div class="card-title">الفئات</div>
     <div class="cat-list" id="catList"></div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div id="catIconPreviewWrap" onclick="document.getElementById('catIconInput').click()" title="اختر أيقونة للفئة"
+        style="width:44px;height:44px;border-radius:12px;border:1.5px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:1.3rem;transition:border-color 0.2s;overflow:hidden;">
+        <span id="catIconEmoji">🖼️</span>
+        <img id="catIconImgPreview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;"/>
+      </div>
+      <input type="file" id="catIconInput" accept="image/*" style="display:none" onchange="previewCatIcon(event)"/>
       <input type="text" id="newCatInput" placeholder="اسم الفئة الجديدة" style="flex:1"/>
       <button class="btn btn-primary btn-sm" onclick="addCategory()">+ إضافة</button>
     </div>
+    <div style="font-size:0.75rem;color:var(--text2);margin-top:6px;">اضغط على المربع لرفع أيقونة مخصصة (اختياري)</div>
   </div>
 
   <div class="card">
@@ -853,7 +860,7 @@ let state = {
   transactions: [],
   balances: { cash: 0, ahly: 0, cairo: 0, masrInstapay: 0, vodafone: 0, saving: 0 },
   categories: ['فطار','غداء','عشاء','سوبر ماركت','مواصلات','فواتير','ترفيه','ملابس','صحة','تعليم','مدخرات','دخل','أخرى'],
-  currentType: 'expense',
+  catCustomIcons: {}, // صور مخصصة للفئات { 'اسم الفئة': 'base64...' }
   statPeriod: 'month',
   driveConnected: false,
   driveFileId: null,
@@ -1009,7 +1016,10 @@ function renderHistory() {
 
 function txHTML(tx, showDel=false) {
   const w = WALLETS[tx.wallet] || { name: tx.wallet, icon: '💳' };
-  const catIcon = CAT_ICONS[tx.category] || '📌';
+  const customImg = state.catCustomIcons && state.catCustomIcons[tx.category];
+  const catIcon = customImg
+    ? `<img src="${customImg}" style="width:22px;height:22px;border-radius:5px;object-fit:cover;"/>`
+    : (CAT_ICONS[tx.category] || '📌');
   const dateStr = new Date(tx.date).toLocaleDateString('ar-EG');
   const imgBtn = tx.image ? `<button class="btn btn-sm" style="background:var(--surface2);color:var(--text)" onclick="viewImg('${tx.id}')"><i class="fas fa-image"></i></button>` : '';
   const delBtn = showDel ? `<button class="btn btn-sm btn-danger" onclick="deleteTx('${tx.id}')"><i class="fas fa-trash"></i></button>` : '';
@@ -1111,6 +1121,11 @@ function renderStats() {
 }
 
 // ==================== CATEGORIES ====================
+function getCatDisplay(c) {
+  const customImg = state.catCustomIcons && state.catCustomIcons[c];
+  return customImg ? `<img src="${customImg}" style="width:16px;height:16px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-left:3px;"/>` : (CAT_ICONS[c] || '📌');
+}
+
 function populateCategorySelects() {
   const sel = document.getElementById('txCategory');
   const fc = document.getElementById('filterCat');
@@ -1121,11 +1136,33 @@ function populateCategorySelects() {
 
 function renderCategories() {
   const el = document.getElementById('catList');
-  el.innerHTML = state.categories.map(c=>`
+  el.innerHTML = state.categories.map(c => {
+    const customImg = state.catCustomIcons && state.catCustomIcons[c];
+    const iconHtml = customImg
+      ? `<img src="${customImg}" style="width:18px;height:18px;border-radius:4px;object-fit:cover;vertical-align:middle;"/>`
+      : (CAT_ICONS[c] || '📌');
+    return `
     <div class="cat-chip">
-      ${CAT_ICONS[c]||'📌'} ${c}
+      ${iconHtml} ${c}
       <span class="del" onclick="delCat('${c}')">✕</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+
+let catIconData = null;
+
+function previewCatIcon(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    catIconData = ev.target.result;
+    document.getElementById('catIconEmoji').style.display = 'none';
+    const img = document.getElementById('catIconImgPreview');
+    img.src = catIconData;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
 }
 
 function addCategory() {
@@ -1133,12 +1170,22 @@ function addCategory() {
   if (!val) return;
   if (state.categories.includes(val)) return showToast('الفئة موجودة مسبقاً');
   state.categories.push(val);
+  if (catIconData) {
+    if (!state.catCustomIcons) state.catCustomIcons = {};
+    state.catCustomIcons[val] = catIconData;
+  }
+  // reset
   document.getElementById('newCatInput').value = '';
+  document.getElementById('catIconInput').value = '';
+  document.getElementById('catIconEmoji').style.display = '';
+  document.getElementById('catIconImgPreview').style.display = 'none';
+  catIconData = null;
   save(); renderAll();
 }
 
 function delCat(c) {
   state.categories = state.categories.filter(x=>x!==c);
+  if (state.catCustomIcons) delete state.catCustomIcons[c];
   save(); renderAll();
 }
 
