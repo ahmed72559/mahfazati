@@ -318,6 +318,7 @@
 <div class="tabs">
   <div class="tab active" onclick="showPage('home')"><i class="fas fa-home"></i>الرئيسية</div>
   <div class="tab" onclick="showPage('add')"><i class="fas fa-plus-circle"></i>إضافة</div>
+  <div class="tab" onclick="showPage('transfer')"><i class="fas fa-exchange-alt"></i>تحويل</div>
   <div class="tab" onclick="showPage('history')"><i class="fas fa-list"></i>السجل</div>
   <div class="tab" onclick="showPage('stats')"><i class="fas fa-chart-pie"></i>إحصائيات</div>
   <div class="tab" onclick="showPage('settings')"><i class="fas fa-cog"></i>الإعدادات</div>
@@ -403,6 +404,81 @@
     <button class="btn btn-primary btn-full" onclick="saveTransaction()">
       <i class="fas fa-check"></i> حفظ العملية
     </button>
+  </div>
+</div>
+
+<!-- ===================== TRANSFER ===================== -->
+<div class="page" id="page-transfer">
+
+  <!-- Transfer visual card -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;" id="trFromCard">
+        <div style="font-size:1.6rem;margin-bottom:4px;" id="trFromIcon">💵</div>
+        <div style="font-size:0.8rem;color:var(--text2);">من</div>
+        <div style="font-weight:700;font-size:0.9rem;margin-top:2px;" id="trFromName">كاش</div>
+        <div style="font-size:0.78rem;color:var(--accent);margin-top:4px;" id="trFromBal">0 ج</div>
+      </div>
+      <div style="font-size:1.5rem;color:var(--accent);flex-shrink:0;cursor:pointer;" onclick="swapWallets()" title="عكس التحويل">
+        <i class="fas fa-arrows-alt-h"></i>
+      </div>
+      <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;" id="trToCard">
+        <div style="font-size:1.6rem;margin-bottom:4px;" id="trToIcon">🏦</div>
+        <div style="font-size:0.8rem;color:var(--text2);">إلى</div>
+        <div style="font-weight:700;font-size:0.9rem;margin-top:2px;" id="trToName">الأهلي</div>
+        <div style="font-size:0.78rem;color:var(--accent3);margin-top:4px;" id="trToBal">0 ج</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>من المحفظة</label>
+      <select id="trFrom" onchange="updateTransferUI()">
+        <option value="cash">💵 كاش</option>
+        <option value="ahly">🏦 الأهلي - إنستاباي</option>
+        <option value="cairo">🏦 بنك القاهرة - إنستاباي</option>
+        <option value="masrInstapay">🏦 بنك مصر - إنستاباي</option>
+        <option value="vodafone">📱 فودافون كاش</option>
+        <option value="saving">🐷 مدخرات</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>إلى المحفظة</label>
+      <select id="trTo" onchange="updateTransferUI()">
+        <option value="ahly">🏦 الأهلي - إنستاباي</option>
+        <option value="cash">💵 كاش</option>
+        <option value="cairo">🏦 بنك القاهرة - إنستاباي</option>
+        <option value="masrInstapay">🏦 بنك مصر - إنستاباي</option>
+        <option value="vodafone">📱 فودافون كاش</option>
+        <option value="saving">🐷 مدخرات</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>المبلغ (جنيه)</label>
+        <input type="number" id="trAmount" placeholder="0.00" inputmode="decimal" oninput="updateTransferUI()"/>
+      </div>
+      <div class="form-group">
+        <label>التاريخ</label>
+        <input type="date" id="trDate"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>ملاحظات (اختياري)</label>
+      <textarea id="trNote" placeholder="مثلاً: سحبت من الصراف..."></textarea>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="saveTransfer()" style="background:linear-gradient(135deg,#ff7b2e,#f7971e);">
+      <i class="fas fa-paper-plane"></i> تنفيذ التحويل
+    </button>
+  </div>
+
+  <!-- Transfer history -->
+  <div class="card">
+    <div class="card-title">سجل التحويلات</div>
+    <div id="transferList"></div>
   </div>
 </div>
 
@@ -555,6 +631,7 @@ function init() {
   }
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('txDate').value = today;
+  document.getElementById('trDate').value = today;
   renderAll();
 }
 
@@ -842,10 +919,141 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const idx = ['home','add','history','stats','settings'].indexOf(name);
+  const idx = ['home','add','transfer','history','stats','settings'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   if (name==='stats') renderStats();
   if (name==='history') renderHistory();
+  if (name==='transfer') { updateTransferUI(); renderTransferList(); }
+}
+
+// ==================== TRANSFERS ====================
+function updateTransferUI() {
+  const fromKey = document.getElementById('trFrom').value;
+  const toKey   = document.getElementById('trTo').value;
+  const amount  = parseFloat(document.getElementById('trAmount').value) || 0;
+  const fromW = WALLETS[fromKey];
+  const toW   = WALLETS[toKey];
+
+  document.getElementById('trFromIcon').textContent = fromW.icon;
+  document.getElementById('trFromName').textContent = fromW.name.split(' ')[0];
+  document.getElementById('trToIcon').textContent   = toW.icon;
+  document.getElementById('trToName').textContent   = toW.name.split(' ')[0];
+
+  const fromBal = calcWalletBalance(fromKey);
+  const toBal   = calcWalletBalance(toKey);
+  document.getElementById('trFromBal').textContent = fmt(fromBal);
+  document.getElementById('trToBal').textContent   = fmt(toBal);
+  document.getElementById('trFromBal').style.color = (amount > fromBal && amount > 0) ? 'var(--accent2)' : 'var(--accent)';
+}
+
+function swapWallets() {
+  const from = document.getElementById('trFrom');
+  const to   = document.getElementById('trTo');
+  const tmp  = from.value;
+  from.value = to.value;
+  to.value   = tmp;
+  updateTransferUI();
+}
+
+function saveTransfer() {
+  const fromKey = document.getElementById('trFrom').value;
+  const toKey   = document.getElementById('trTo').value;
+  const amount  = parseFloat(document.getElementById('trAmount').value);
+  const date    = document.getElementById('trDate').value;
+  const note    = document.getElementById('trNote').value;
+
+  if (fromKey === toKey) return showToast('اختار محفظتين مختلفتين');
+  if (!amount || amount <= 0) return showToast('أدخل مبلغاً صحيحاً');
+  if (!date) return showToast('أدخل التاريخ');
+
+  const fromBal = calcWalletBalance(fromKey);
+  if (amount > fromBal) {
+    if (!confirm(`الرصيد الحالي ${fmt(fromBal)} أقل من المبلغ. تكمل؟`)) return;
+  }
+
+  const id = Date.now().toString();
+  // سجل خروج من المحفظة الأولى
+  state.transactions.push({
+    id: id + '_out',
+    type: 'expense',
+    amount, date,
+    wallet: fromKey,
+    category: 'تحويل',
+    note: `تحويل إلى ${WALLETS[toKey].name}${note ? ' · ' + note : ''}`,
+    isTransfer: true,
+    transferId: id,
+    image: null,
+    createdAt: new Date().toISOString()
+  });
+  // سجل دخول للمحفظة الثانية
+  state.transactions.push({
+    id: id + '_in',
+    type: 'income',
+    amount, date,
+    wallet: toKey,
+    category: 'تحويل',
+    note: `تحويل من ${WALLETS[fromKey].name}${note ? ' · ' + note : ''}`,
+    isTransfer: true,
+    transferId: id,
+    image: null,
+    createdAt: new Date().toISOString()
+  });
+
+  save(); renderAll();
+  showToast(`تم تحويل ${fmt(amount)} ✓`);
+
+  document.getElementById('trAmount').value = '';
+  document.getElementById('trNote').value   = '';
+  updateTransferUI();
+  renderTransferList();
+}
+
+function renderTransferList() {
+  const transfers = {};
+  state.transactions.filter(t=>t.isTransfer).forEach(t=>{
+    if (!transfers[t.transferId]) transfers[t.transferId] = {};
+    if (t.type==='expense') transfers[t.transferId].out = t;
+    else transfers[t.transferId].in = t;
+  });
+
+  const el = document.getElementById('transferList');
+  const list = Object.values(transfers).sort((a,b)=>new Date((b.out||b.in).date)-new Date((a.out||a.in).date));
+
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><i class="fas fa-exchange-alt"></i>لا توجد تحويلات بعد</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(tr => {
+    const tx = tr.out || tr.in;
+    const fromW = tr.out ? WALLETS[tr.out.wallet] : { icon:'?', name:'?' };
+    const toW   = tr.in  ? WALLETS[tr.in.wallet]  : { icon:'?', name:'?' };
+    const dateStr = new Date(tx.date).toLocaleDateString('ar-EG');
+    const note = tr.out?.note?.split(' · ')[1] || '';
+    return `
+      <div class="tx-item">
+        <div class="tx-icon" style="background:rgba(255,123,46,0.15);color:var(--accent);font-size:1rem;">
+          <i class="fas fa-exchange-alt"></i>
+        </div>
+        <div class="tx-info">
+          <div class="tx-cat">${fromW.icon} ${fromW.name.split(' ')[0]} ← ${toW.icon} ${toW.name.split(' ')[0]}</div>
+          <div class="tx-sub">${dateStr}${note ? ' · ' + note : ''}</div>
+        </div>
+        <div class="tx-right">
+          <div class="tx-amt" style="color:var(--accent)">${fmt(tr.out?.amount || 0)}</div>
+          <button class="btn btn-sm btn-danger" style="margin-top:4px" onclick="deleteTransfer('${tx.transferId}')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function deleteTransfer(transferId) {
+  if (!confirm('حذف هذا التحويل؟')) return;
+  state.transactions = state.transactions.filter(t=>t.transferId !== transferId);
+  save(); renderAll(); renderTransferList();
+  showToast('تم حذف التحويل');
 }
 
 // ==================== GOOGLE DRIVE ====================
