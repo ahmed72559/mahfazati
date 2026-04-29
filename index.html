@@ -456,6 +456,7 @@
       <label>المحفظة / المصدر</label>
       <select id="txWallet">
         <option value="cash">💵 كاش</option>
+        <option value="cashInstapay">💵 كاش إنستاباي</option>
         <option value="ahly">🏦 الأهلي - إنستاباي</option>
         <option value="cairo">🏦 بنك القاهرة - إنستاباي</option>
         <option value="masrInstapay">🏦 بنك مصر - إنستاباي</option>
@@ -518,6 +519,7 @@
       <label>من المحفظة</label>
       <select id="trFrom" onchange="updateTransferUI()">
         <option value="cash">💵 كاش</option>
+        <option value="cashInstapay">💵 كاش إنستاباي</option>
         <option value="ahly">🏦 الأهلي - إنستاباي</option>
         <option value="cairo">🏦 بنك القاهرة - إنستاباي</option>
         <option value="masrInstapay">🏦 بنك مصر - إنستاباي</option>
@@ -531,6 +533,7 @@
       <select id="trTo" onchange="updateTransferUI()">
         <option value="ahly">🏦 الأهلي - إنستاباي</option>
         <option value="cash">💵 كاش</option>
+        <option value="cashInstapay">💵 كاش إنستاباي</option>
         <option value="cairo">🏦 بنك القاهرة - إنستاباي</option>
         <option value="masrInstapay">🏦 بنك مصر - إنستاباي</option>
         <option value="vodafone">📱 فودافون كاش</option>
@@ -572,6 +575,7 @@
     <select id="filterWallet" onchange="renderHistory()">
       <option value="">كل المحافظ</option>
       <option value="cash">كاش</option>
+      <option value="cashInstapay">كاش إنستاباي</option>
       <option value="ahly">الأهلي</option>
       <option value="cairo">القاهرة</option>
       <option value="masrInstapay">بنك مصر</option>
@@ -741,6 +745,7 @@
         <label>المحفظة / البطاقة</label>
         <select id="instWallet">
           <option value="cash">💵 كاش</option>
+          <option value="cashInstapay">💵 كاش إنستاباي</option>
           <option value="ahly">🏦 الأهلي - إنستاباي</option>
           <option value="cairo">🏦 بنك القاهرة - إنستاباي</option>
           <option value="masrInstapay">🏦 بنك مصر - إنستاباي</option>
@@ -847,6 +852,7 @@
 // ==================== STATE ====================
 const WALLETS = {
   cash:         { name: 'كاش', icon: '💵', color: '#f7971e' },
+  cashInstapay: { name: 'كاش إنستاباي', icon: '💵', color: '#f7971e' },
   ahly:         { name: 'الأهلي إنستاباي', icon: '🏦', color: '#6c63ff' },
   cairo:        { name: 'القاهرة إنستاباي', icon: '🏦', color: '#43e97b' },
   masrInstapay: { name: 'بنك مصر إنستاباي', icon: '🏦', color: '#ff6584' },
@@ -858,7 +864,7 @@ const CAT_ICONS = { 'فطار':'☕','غداء':'🍽','عشاء':'🌙','سوب
 
 let state = {
   transactions: [],
-  balances: { cash: 0, ahly: 0, cairo: 0, masrInstapay: 0, vodafone: 0, saving: 0 },
+  balances: { cash: 0, cashInstapay: 0, ahly: 0, cairo: 0, masrInstapay: 0, vodafone: 0, saving: 0 },
   categories: ['فطار','غداء','عشاء','سوبر ماركت','مواصلات','فواتير','ترفيه','ملابس','صحة','تعليم','مدخرات','دخل','أخرى'],
   catCustomIcons: {}, // صور مخصصة للفئات { 'اسم الفئة': 'base64...' }
   statPeriod: 'month',
