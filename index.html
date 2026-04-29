@@ -6,7 +6,7 @@
   <title>محفظتي</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-  <script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=E-C7ax3Rr3aHOo6Eu_Q9eUsPbiDz6duuFWwA1Ymec19AMuwX_XEkQm6L0S_xXHY9Z11Ru4foqTH1GYTFJC2cOTw2B95CyGrJZsBWwN1y0pRkoZZCjsOp8xY9NrtYNzM2Bxnk9xgUAjqAErj0NWGiHGkkgKRru-DyBXTXCP843Zv2-rNKEF7vqPac6r7d9ug1LPq2MXpJTuxxoeSeYkzPAcVLehEMwMBmIJWdICop5_USQWXQ5Mky3kYJylc0URzEtH-BbAPxY40i7_o0o8wgGD7kMQ33D5JWXqvBGxoBRaXXh2rrilZ6f-BjTI9_1_gr" charset="UTF-8"></script><style>
+  <style>
     :root {
       --bg: #111213;
       --surface: #1c1d1f;
@@ -340,7 +340,7 @@
       color: #1a1a2e; background: #edf0f4;
     }
 
-    /* ---- DYNAMIC BANK REMINDER TOAST ---- */
+    /* ---- CAIRO INSTAPAY REMINDER TOAST ---- */
     .cairo-reminder {
       position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
       background: #1e3a5f; color: #fff; padding: 14px 20px; border-radius: 16px;
@@ -364,7 +364,8 @@
     body.numbers-hidden .sv,
     body.numbers-hidden .bar-val,
     body.numbers-hidden #trFromBal,
-    body.numbers-hidden #trToBal { color: transparent !important; }
+    body.numbers-hidden #trToBal,
+    body.numbers-hidden .tx-amt { color: transparent !important; }
     body.numbers-hidden .wamt::after,
     body.numbers-hidden #homeIncome::after,
     body.numbers-hidden #homeExpense::after,
@@ -396,22 +397,24 @@
   </div>
 </div>
 
-<!-- TABS (MODIFIED: INSTALLMENTS BEFORE SETTINGS) -->
+<!-- TABS -->
 <div class="tabs">
   <div class="tab active" onclick="showPage('home')"><i class="fas fa-home"></i>الرئيسية</div>
   <div class="tab" onclick="showPage('add')"><i class="fas fa-plus-circle"></i>إضافة</div>
   <div class="tab" onclick="showPage('transfer')"><i class="fas fa-exchange-alt"></i>تحويل</div>
   <div class="tab" onclick="showPage('history')"><i class="fas fa-list"></i>السجل</div>
   <div class="tab" onclick="showPage('stats')"><i class="fas fa-chart-pie"></i>إحصائيات</div>
-  <div class="tab" onclick="showPage('installments')"><i class="fas fa-credit-card"></i>تقسيط</div>
   <div class="tab" onclick="showPage('settings')"><i class="fas fa-cog"></i>الإعدادات</div>
+  <div class="tab" onclick="showPage('installments')"><i class="fas fa-credit-card"></i>تقسيط</div>
 </div>
 
 <!-- ===================== HOME ===================== -->
 <div class="page active" id="page-home">
+  <!-- Wallets -->
   <div class="card-title" style="padding:0 4px;margin-bottom:10px;margin-top:4px;">💼 محافظي</div>
   <div class="wallet-grid" id="walletGrid"></div>
 
+  <!-- Quick summary -->
   <div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:center;">
     <div>
       <div style="font-size:0.75rem;color:var(--text2);margin-bottom:4px;">↑ دخل الشهر</div>
@@ -423,6 +426,7 @@
     </div>
   </div>
 
+  <!-- Recent transactions -->
   <div class="card">
     <div class="card-title">آخر العمليات</div>
     <div id="recentList"></div>
@@ -435,25 +439,41 @@
     <button class="type-btn active expense" id="btnExpense" onclick="setType('expense')">↓ مصروف</button>
     <button class="type-btn income" id="btnIncome" onclick="setType('income')">↑ دخل</button>
   </div>
-  <div class="card expense-mode" id="addFormCard">
+
+  <div class="card" id="addFormCard">
     <div class="form-row">
       <div class="form-group">
-        <label>المبلغ</label>
-        <input type="number" id="txAmount" placeholder="0" inputmode="decimal" />
+        <label>المبلغ (جنيه)</label>
+        <input type="number" id="txAmount" placeholder="0.00" inputmode="decimal"/>
       </div>
       <div class="form-group">
-        <label>المحفظة</label>
-        <select id="txWallet"></select>
+        <label>التاريخ</label>
+        <input type="date" id="txDate"/>
       </div>
     </div>
+
+    <div class="form-group">
+      <label>المحفظة / المصدر</label>
+      <select id="txWallet">
+        <option value="cash">💵 كاش</option>
+        <option value="ahly">🏦 الأهلي - إنستاباي</option>
+        <option value="cairo">🏦 بنك القاهرة - إنستاباي</option>
+        <option value="masrInstapay">🏦 بنك مصر - إنستاباي</option>
+        <option value="vodafone">📱 فودافون كاش</option>
+        <option value="saving">🐷 مدخرات</option>
+      </select>
+    </div>
+
     <div class="form-group">
       <label>الفئة</label>
-      <select id="txCat"></select>
+      <select id="txCategory" class="form-control"></select>
     </div>
+
     <div class="form-group">
       <label>ملاحظات</label>
       <textarea id="txNote" placeholder="أي تفاصيل إضافية..."></textarea>
     </div>
+
     <div class="form-group">
       <label>صورة فاتورة / إيصال</label>
       <div class="upload-area" onclick="document.getElementById('imgInput').click()">
@@ -464,6 +484,7 @@
       <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="previewImg(event)"/>
       <img id="imgPreview" class="upload-preview" style="display:none"/>
     </div>
+
     <button class="btn btn-primary btn-full" onclick="saveTransaction()">
       <i class="fas fa-check"></i> حفظ العملية
     </button>
@@ -472,6 +493,8 @@
 
 <!-- ===================== TRANSFER ===================== -->
 <div class="page" id="page-transfer">
+
+  <!-- Transfer visual card -->
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
       <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;" id="trFromCard">
@@ -484,36 +507,61 @@
         <i class="fas fa-arrows-alt-h"></i>
       </div>
       <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;" id="trToCard">
-        <div style="font-size:1.6rem;margin-bottom:4px;" id="trToIcon">💳</div>
+        <div style="font-size:1.6rem;margin-bottom:4px;" id="trToIcon">🏦</div>
         <div style="font-size:0.8rem;color:var(--text2);">إلى</div>
-        <div style="font-weight:700;font-size:0.9rem;margin-top:2px;" id="trToName">بنك</div>
-        <div style="font-size:0.78rem;color:var(--accent);margin-top:4px;" id="trToBal">0 ج</div>
+        <div style="font-weight:700;font-size:0.9rem;margin-top:2px;" id="trToName">الأهلي</div>
+        <div style="font-size:0.78rem;color:var(--accent3);margin-top:4px;" id="trToBal">0 ج</div>
       </div>
     </div>
+
+    <div class="form-group">
+      <label>من المحفظة</label>
+      <select id="trFrom" onchange="updateTransferUI()">
+        <option value="cash">💵 كاش</option>
+        <option value="ahly">🏦 الأهلي - إنستاباي</option>
+        <option value="cairo">🏦 بنك القاهرة - إنستاباي</option>
+        <option value="masrInstapay">🏦 بنك مصر - إنستاباي</option>
+        <option value="vodafone">📱 فودافون كاش</option>
+        <option value="saving">🐷 مدخرات</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>إلى المحفظة</label>
+      <select id="trTo" onchange="updateTransferUI()">
+        <option value="ahly">🏦 الأهلي - إنستاباي</option>
+        <option value="cash">💵 كاش</option>
+        <option value="cairo">🏦 بنك القاهرة - إنستاباي</option>
+        <option value="masrInstapay">🏦 بنك مصر - إنستاباي</option>
+        <option value="vodafone">📱 فودافون كاش</option>
+        <option value="saving">🐷 مدخرات</option>
+      </select>
+    </div>
+
     <div class="form-row">
       <div class="form-group">
-        <label>من</label>
-        <select id="trFrom" onchange="updateTransferUI()"></select>
+        <label>المبلغ (جنيه)</label>
+        <input type="number" id="trAmount" placeholder="0.00" inputmode="decimal" oninput="updateTransferUI()"/>
       </div>
       <div class="form-group">
-        <label>إلى</label>
-        <select id="trTo" onchange="updateTransferUI()"></select>
+        <label>التاريخ</label>
+        <input type="date" id="trDate"/>
       </div>
     </div>
-    <div class="form-group">
-      <label>المبلغ</label>
-      <input type="number" id="trAmount" placeholder="0" inputmode="decimal" />
-    </div>
+
     <div class="form-group">
       <label>ملاحظات (اختياري)</label>
-      <input type="text" id="trNote" placeholder="سبب التحويل..." />
+      <textarea id="trNote" placeholder="مثلاً: سحبت من الصراف..."></textarea>
     </div>
-    <button class="btn btn-primary btn-full" onclick="saveTransfer()">
-      <i class="fas fa-exchange-alt"></i> تنفيذ التحويل
+
+    <button class="btn btn-primary btn-full" onclick="saveTransfer()" style="background:linear-gradient(135deg,#ff7b2e,#f7971e);">
+      <i class="fas fa-paper-plane"></i> تنفيذ التحويل
     </button>
   </div>
+
+  <!-- Transfer history -->
   <div class="card">
-    <div class="card-title">آخر التحويلات</div>
+    <div class="card-title">سجل التحويلات</div>
     <div id="transferList"></div>
   </div>
 </div>
@@ -521,13 +569,19 @@
 <!-- ===================== HISTORY ===================== -->
 <div class="page" id="page-history">
   <div class="filter-row">
-    <select id="filterType" onchange="renderHistory()">
-      <option value="">الكل (دخل / مصروف)</option>
-      <option value="expense">مصروف فقط</option>
-      <option value="income">دخل فقط</option>
-    </select>
     <select id="filterWallet" onchange="renderHistory()">
       <option value="">كل المحافظ</option>
+      <option value="cash">كاش</option>
+      <option value="ahly">الأهلي</option>
+      <option value="cairo">القاهرة</option>
+      <option value="masrInstapay">بنك مصر</option>
+      <option value="vodafone">فودافون كاش</option>
+      <option value="saving">مدخرات</option>
+    </select>
+    <select id="filterType" onchange="renderHistory()">
+      <option value="">الكل</option>
+      <option value="expense">مصاريف</option>
+      <option value="income">دخل</option>
     </select>
     <select id="filterCat" onchange="renderHistory()">
       <option value="">كل الفئات</option>
@@ -541,22 +595,24 @@
 <!-- ===================== STATS ===================== -->
 <div class="page" id="page-stats">
   <div class="period-toggle">
-    <button class="period-btn" onclick="setPeriod('day')">اليوم</button>
-    <button class="period-btn active" onclick="setPeriod('month')">الشهر</button>
+    <button class="period-btn active" onclick="setPeriod('day')">اليوم</button>
+    <button class="period-btn" onclick="setPeriod('month')">الشهر</button>
     <button class="period-btn" onclick="setPeriod('year')">السنة</button>
   </div>
+
   <div class="stat-hero">
-    <div class="big" id="statTotalExp">0 ج</div>
-    <div class="label">إجمالي المصاريف</div>
+    <div class="big" id="statNet">0 ج</div>
+    <div class="label" id="statNetLabel">صافي الشهر</div>
   </div>
+
   <div class="stats-grid">
     <div class="stat-box">
-      <div class="sv" style="color:var(--accent3);" id="statTotalInc">0 ج</div>
-      <div class="sl">إجمالي الدخل</div>
+      <div class="sv" style="color:var(--accent3);" id="statIncome">0 ج</div>
+      <div class="sl">↑ إجمالي الدخل</div>
     </div>
     <div class="stat-box">
-      <div class="sv" style="color:var(--text);" id="statNet">0 ج</div>
-      <div class="sl">الصافي</div>
+      <div class="sv" style="color:var(--accent2);" id="statExpense">0 ج</div>
+      <div class="sl">↓ إجمالي المصاريف</div>
     </div>
     <div class="stat-box">
       <div class="sv" style="color:var(--accent);" id="statCount">0</div>
@@ -567,56 +623,15 @@
       <div class="sl">متوسط العملية</div>
     </div>
   </div>
+
   <div class="card">
     <div class="card-title">المصاريف حسب الفئة</div>
     <div class="bar-chart" id="catChart"></div>
   </div>
+
   <div class="card">
     <div class="card-title">المصاريف حسب المحفظة</div>
     <div class="bar-chart" id="walletChart"></div>
-  </div>
-</div>
-
-<!-- ===================== INSTALLMENTS ===================== -->
-<div class="page" id="page-installments">
-  <div class="card">
-    <div class="card-title">إضافة قسط جديد</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>اسم المنتج/القسط</label>
-        <input type="text" id="instName" placeholder="مثال: موبايل، ثلاجة..." />
-      </div>
-      <div class="form-group">
-        <label>إجمالي المبلغ المتبقي</label>
-        <input type="number" id="instTotal" placeholder="0" inputmode="decimal" />
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>عدد الأشهر (الأقساط)</label>
-        <input type="number" id="instCount" placeholder="0" inputmode="numeric" />
-      </div>
-      <div class="form-group">
-        <label>محفظة الخصم</label>
-        <select id="instWallet"></select>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>صورة الفاتورة (اختياري)</label>
-      <input type="file" id="instImgInput" accept="image/*" style="display:none" onchange="previewInstImg(event)"/>
-      <div class="upload-area" onclick="document.getElementById('instImgInput').click()" style="padding:10px;">
-        <i class="fas fa-camera" style="font-size:1.2rem;margin-bottom:4px;"></i>
-        <div style="font-size:0.8rem;">ارفع صورة</div>
-      </div>
-      <img id="instImgPreview" class="upload-preview" style="display:none"/>
-    </div>
-    <button class="btn btn-primary btn-full" onclick="addInstallment()">
-      <i class="fas fa-plus"></i> إضافة قسط
-    </button>
-  </div>
-  <div class="card">
-    <div class="card-title">الأقساط الحالية</div>
-    <div id="installmentsList"></div>
   </div>
 </div>
 
@@ -630,15 +645,10 @@
       <button class="btn btn-primary btn-sm" onclick="addCategory()">+ إضافة</button>
     </div>
   </div>
+
   <div class="card">
     <div class="card-title">أرصدة المحافظ</div>
     <div id="walletBalanceForm"></div>
-  </div>
-  <!-- DYNAMIC BANK FEES REMINDER ADDED HERE -->
-  <div class="card">
-    <div class="card-title">تذكير مصاريف البنوك (شهرياً)</div>
-    <p style="font-size:0.75rem;color:var(--text2);margin-bottom:12px;">ضع المبلغ بصفر (0) لإلغاء التذكير الخاص بأي بنك.</p>
-    <div id="bankFeesForm"></div>
   </div>
 
   <div class="card">
@@ -648,18 +658,100 @@
       <i class="fab fa-google-drive"></i>
       <span id="driveSettingTxt">ربط Google Drive</span>
     </button>
-  </div>
-  <div class="card">
-    <div class="card-title">نسخ احتياطي (محلي)</div>
-    <div style="display:flex;gap:8px;">
+    <div style="margin-top:10px;display:flex;gap:8px;">
       <button class="btn btn-sm" style="background:var(--surface2);color:var(--text);flex:1" onclick="exportData()">
-        <i class="fas fa-download"></i> تصدير
+        <i class="fas fa-download"></i> تصدير JSON
       </button>
       <button class="btn btn-sm" style="background:var(--surface2);color:var(--text);flex:1" onclick="importData()">
         <i class="fas fa-upload"></i> استيراد
       </button>
-      <input type="file" id="importInput" style="display:none" accept=".json" onchange="handleImport(event)"/>
     </div>
+    <input type="file" id="importInput" accept=".json" style="display:none" onchange="handleImport(event)"/>
+  </div>
+</div>
+
+<!-- ===================== INSTALLMENTS ===================== -->
+<div class="page" id="page-installments">
+  <div class="card" id="installFormCard" style="border-color:rgba(255,123,46,0.4);">
+    <div class="card-title" style="margin-bottom:14px;">💳 إضافة مشتريات بالتقسيط</div>
+
+    <div class="form-group">
+      <label>اسم المنتج / الشراء</label>
+      <input type="text" id="instName" placeholder="مثال: موبايل سامسونج"/>
+    </div>
+
+    <div class="form-group">
+      <label>صورة المنتج / الفاتورة</label>
+      <div class="upload-area" onclick="document.getElementById('instImgInput').click()">
+        <i class="fas fa-camera"></i>
+        <div>اضغط لرفع صورة</div>
+        <div style="font-size:0.75rem;margin-top:4px;">PNG, JPG, JPEG</div>
+      </div>
+      <input type="file" id="instImgInput" accept="image/*" style="display:none" onchange="previewInstImg(event)"/>
+      <img id="instImgPreview" class="upload-preview" style="display:none"/>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>إجمالي المبلغ (جنيه)</label>
+        <input type="number" id="instTotal" placeholder="0.00" inputmode="decimal" oninput="calcInstallment()"/>
+      </div>
+      <div class="form-group">
+        <label>عدد الأقساط</label>
+        <input type="number" id="instCount" placeholder="12" inputmode="numeric" oninput="calcInstallment()"/>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>تاريخ أول قسط</label>
+        <input type="date" id="instStartDate"/>
+      </div>
+      <div class="form-group">
+        <label>المحفظة / البطاقة</label>
+        <select id="instWallet">
+          <option value="cash">💵 كاش</option>
+          <option value="ahly">🏦 الأهلي - إنستاباي</option>
+          <option value="cairo">🏦 بنك القاهرة - إنستاباي</option>
+          <option value="masrInstapay">🏦 بنك مصر - إنستاباي</option>
+          <option value="vodafone">📱 فودافون كاش</option>
+          <option value="saving">🐷 مدخرات</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- حساب القسط -->
+    <div id="instCalcBox" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;">
+        <div>
+          <div style="font-size:0.72rem;color:var(--text2);margin-bottom:4px;">إجمالي المبلغ</div>
+          <div style="font-size:1.1rem;font-weight:800;color:var(--accent);" id="instTotalShow">0 ج</div>
+        </div>
+        <div>
+          <div style="font-size:0.72rem;color:var(--text2);margin-bottom:4px;">عدد الأقساط</div>
+          <div style="font-size:1.1rem;font-weight:800;color:var(--accent4);" id="instCountShow">0</div>
+        </div>
+        <div>
+          <div style="font-size:0.72rem;color:var(--text2);margin-bottom:4px;">القسط الشهري</div>
+          <div style="font-size:1.1rem;font-weight:800;color:var(--accent3);" id="instMonthly">0 ج</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>ملاحظات</label>
+      <textarea id="instNote" placeholder="أي تفاصيل إضافية..."></textarea>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="saveInstallment()">
+      <i class="fas fa-check"></i> حفظ التقسيط
+    </button>
+  </div>
+
+  <!-- قائمة التقسيطات -->
+  <div class="card">
+    <div class="card-title">📋 قائمة التقسيطات</div>
+    <div id="installmentsList"></div>
   </div>
 </div>
 
@@ -677,14 +769,14 @@
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- DYNAMIC BANK REMINDER -->
-<div class="cairo-reminder" id="bankReminder">
-  <div id="brTitle">🏦 تذكير: رسوم بنك</div>
-  <div id="brSub" style="font-size:0.78rem;color:#93c5fd;margin-top:4px;"></div>
+<!-- CAIRO INSTAPAY REMINDER -->
+<div class="cairo-reminder" id="cairoReminder">
+  <div>🏦 تذكير: انستاباي بنك القاهرة</div>
+  <div style="font-size:0.78rem;color:#93c5fd;margin-top:4px;">بيخصم 5 جنيه تلقائياً هذا الشهر</div>
   <div class="cr-btns">
-    <button class="cr-btn" style="background:var(--accent3);color:#000;" onclick="confirmBankFee(true)">✅ تأكيد</button>
-    <button class="cr-btn" style="background:var(--accent2);color:#fff;" onclick="confirmBankFee(false)">❌ تعديل</button>
-    <button class="cr-btn" style="background:var(--surface2);color:var(--text);" onclick="dismissBankReminder()">لاحقاً</button>
+    <button class="cr-btn" style="background:var(--accent3);color:#000;" onclick="confirmCairoFee(true)">✅ تأكيد الـ 5 ج</button>
+    <button class="cr-btn" style="background:var(--accent2);color:#fff;" onclick="confirmCairoFee(false)">❌ اتخصم أكتر</button>
+    <button class="cr-btn" style="background:var(--surface2);color:var(--text);" onclick="dismissCairoReminder()">لاحقاً</button>
   </div>
 </div>
 
@@ -702,223 +794,82 @@
 <script>
 // ==================== STATE ====================
 const WALLETS = {
-  cash: { name: 'كاش', icon: '💵', color: '#f7971e' },
-  ahly: { name: 'البنك الأهلي', icon: '🏛', color: '#43e97b' },
-  cairo: { name: 'بنك القاهرة', icon: '🏦', color: '#ff6584' },
-  masrInstapay: { name: 'بنك مصر (انستاباي)', icon: '📱', color: '#ff7b2e' }
+  cash:         { name: 'كاش', icon: '💵', color: '#f7971e' },
+  ahly:         { name: 'الأهلي إنستاباي', icon: '🏦', color: '#6c63ff' },
+  cairo:        { name: 'القاهرة إنستاباي', icon: '🏦', color: '#43e97b' },
+  masrInstapay: { name: 'بنك مصر إنستاباي', icon: '🏦', color: '#ff6584' },
+  vodafone:     { name: 'فودافون كاش', icon: '📱', color: '#e63946' },
+  saving:       { name: 'مدخرات', icon: '🐷', color: '#48cae4' }
 };
 
-let state = JSON.parse(localStorage.getItem('mahfazati_state')) || {
+const CAT_ICONS = { 'فطار':'☕','غداء':'🍽','عشاء':'🌙','سوبر ماركت':'🛒','مواصلات':'🚗','فواتير':'⚡','ترفيه':'🎬','ملابس':'👕','صحة':'💊','تعليم':'📚','مدخرات':'🐷','دخل':'💰','أخرى':'📌' };
+
+let state = {
   transactions: [],
-  balances: { cash: 0, ahly: 0, cairo: 0, masrInstapay: 0 },
-  bankFees: { cairo: 5, ahly: 0, masrInstapay: 0 }, // Added bank fees
-  categories: ['طعام', 'مواصلات', 'فواتير', 'تسوق', 'صحة', 'ترفيه', 'راتب', 'أخرى'],
-  installments: [],
+  balances: { cash: 0, ahly: 0, cairo: 0, masrInstapay: 0, vodafone: 0, saving: 0 },
+  categories: ['فطار','غداء','عشاء','سوبر ماركت','مواصلات','فواتير','ترفيه','ملابس','صحة','تعليم','مدخرات','دخل','أخرى'],
   currentType: 'expense',
   statPeriod: 'month',
   driveConnected: false,
   driveFileId: null,
-  lastSaved: 0
 };
 
-// Ensure bankFees exists for old users
-if (!state.bankFees) {
-  state.bankFees = { cairo: 5, ahly: 0, masrInstapay: 0 };
+// ==================== INIT ====================
+function init() {
+  const saved = localStorage.getItem('mahfazati_v2');
+  if (saved) {
+    try { const d = JSON.parse(saved); Object.assign(state, d); } catch(e) {}
+  }
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('txDate').value = today;
+  document.getElementById('trDate').value = today;
+  // Set initial form card color
+  setType(state.currentType || 'expense');
+  renderAll();
 }
 
 function save() {
-  state.lastSaved = Date.now();
-  localStorage.setItem('mahfazati_state', JSON.stringify(state));
-  if (state.driveConnected && !isSyncing) syncToDrive();
-}
-
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 3000);
-}
-
-// ==================== INITIALIZATION ====================
-function init() {
-  const wSelects = ['txWallet', 'filterWallet', 'trFrom', 'trTo', 'instWallet'];
-  wSelects.forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.innerHTML = Object.keys(WALLETS).map(k=>`<option value="${k}">${WALLETS[k].icon} ${WALLETS[k].name}</option>`).join('');
-  });
-  if(document.getElementById('filterWallet')) {
-    document.getElementById('filterWallet').innerHTML = '<option value="">كل المحافظ</option>' + Object.keys(WALLETS).map(k=>`<option value="${k}">${WALLETS[k].icon} ${WALLETS[k].name}</option>`).join('');
-  }
-  
-  const savedTheme = localStorage.getItem('mahfazati_theme');
-  if (savedTheme === 'light') document.body.classList.add('light-mode');
-  
-  const hiddenNums = localStorage.getItem('mahfazati_hidden');
-  if (hiddenNums === 'true') document.body.classList.add('numbers-hidden');
-  
-  renderAll();
-  
-  // Dynamic bank reminder
-  checkBankReminders();
+  localStorage.setItem('mahfazati_v2', JSON.stringify(state));
+  if (state.driveConnected) syncDrive();
 }
 
 function renderAll() {
   renderWallets();
-  renderCategories();
   renderHome();
-  if(document.getElementById('page-history').classList.contains('active')) renderHistory();
-  if(document.getElementById('page-stats').classList.contains('active')) renderStats();
-  if(document.getElementById('page-transfer').classList.contains('active')) renderTransferList();
-  if(document.getElementById('page-installments').classList.contains('active')) renderInstallments();
-  renderBankFees(); // Render dynamic bank fees in settings
-}
-
-// ==================== THEME & NUMBERS ====================
-function toggleTheme() {
-  document.body.classList.toggle('light-mode');
-  localStorage.setItem('mahfazati_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-}
-
-function toggleHideNumbers() {
-  document.body.classList.toggle('numbers-hidden');
-  localStorage.setItem('mahfazati_hidden', document.body.classList.contains('numbers-hidden') ? 'true' : 'false');
+  renderHistory();
+  renderStats();
+  renderCategories();
+  renderBalanceForm();
+  populateCategorySelects();
+  renderInstallments();
 }
 
 // ==================== WALLETS ====================
-function calcWalletBalance(key) {
-  let b = state.balances[key] || 0;
-  state.transactions.forEach(tx => {
-    if (tx.wallet === key) {
-      if (tx.type === 'income') b += tx.amount;
-      if (tx.type === 'expense') b -= tx.amount;
-    }
-  });
-  return b;
-}
-
 function renderWallets() {
   const grid = document.getElementById('walletGrid');
-  grid.innerHTML = Object.keys(WALLETS).map(key => {
-    const w = WALLETS[key];
+  grid.innerHTML = '';
+  Object.entries(WALLETS).forEach(([key, w]) => {
     const bal = calcWalletBalance(key);
-    return `
-      <div class="wallet-card" onclick="openWalletHistory('${key}')">
-        <div class="wicon">${w.icon}</div>
-        <div class="wname">${w.name}</div>
-        <div class="wamt" style="color:${w.color}">${fmt(bal)}</div>
-      </div>
+    const div = document.createElement('div');
+    div.className = 'wallet-card';
+    div.onclick = () => openWalletHistory(key);
+    div.innerHTML = `
+      <div class="wicon">${w.icon}</div>
+      <div class="wname">${w.name}</div>
+      <div class="wamt" style="color:${bal > 0 ? '#43e97b' : bal < 0 ? '#ff6584' : '#f7971e'}">${fmt(bal)}</div>
     `;
-  }).join('');
-  
-  const form = document.getElementById('walletBalanceForm');
-  form.innerHTML = Object.keys(WALLETS).map(key => `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <span style="font-size:0.85rem;">${WALLETS[key].icon} ${WALLETS[key].name}</span>
-      <input type="number" style="width:100px;padding:6px 10px;font-size:0.85rem;" value="${state.balances[key]||0}" onchange="setBalance('${key}',this.value)" inputmode="decimal"/>
-    </div>`).join('');
+    grid.appendChild(div);
+  });
 }
 
-function setBalance(key, val) {
-  state.balances[key] = parseFloat(val)||0;
-  save(); renderWallets();
-}
-
-// ==================== DYNAMIC BANK FEES REMINDER ====================
-function renderBankFees() {
-  const form = document.getElementById('bankFeesForm');
-  if (!form) return;
-  const banks = ['ahly', 'cairo', 'masrInstapay']; // Banks only
-  
-  form.innerHTML = banks.map(key => `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <span style="font-size:0.85rem;">${WALLETS[key].name}</span>
-      <input type="number" style="width:100px;padding:6px 10px;font-size:0.85rem;" 
-             value="${state.bankFees[key] || 0}" 
-             onchange="setBankFee('${key}', this.value)" inputmode="decimal"/>
-    </div>
-  `).join('');
-}
-
-function setBankFee(key, val) {
-  state.bankFees[key] = parseFloat(val) || 0;
-  save();
-  showToast('تم حفظ مبلغ التذكير ✓');
-  checkBankReminders();
-}
-
-let currentReminderBank = null;
-
-function checkBankReminders() {
-  if (!state.bankFees) return;
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  const banks = Object.keys(state.bankFees);
-  
-  for (let bankKey of banks) {
-    const feeAmount = state.bankFees[bankKey];
-    if (feeAmount > 0) {
-      const alreadyPaid = state.transactions.find(tx => {
-        const d = new Date(tx.date);
-        return tx.wallet === bankKey && 
-               tx.type === 'expense' &&
-               d.getMonth() === currentMonth && 
-               d.getFullYear() === currentYear &&
-               (tx.note.includes('رسوم') || tx.category.includes('رسوم') || tx.category === 'فواتير');
-      });
-
-      if (!alreadyPaid) {
-        currentReminderBank = bankKey;
-        document.getElementById('brTitle').textContent = `🏦 تذكير: رسوم ${WALLETS[bankKey].name}`;
-        document.getElementById('brSub').textContent = `تذكير بخصم ${feeAmount} جنيه تلقائياً هذا الشهر`;
-        document.getElementById('bankReminder').classList.add('show');
-        return; 
-      }
+function calcWalletBalance(key) {
+  let bal = state.balances[key] || 0;
+  state.transactions.forEach(tx => {
+    if (tx.wallet === key) {
+      bal += tx.type === 'income' ? tx.amount : -tx.amount;
     }
-  }
-  
-  dismissBankReminder();
-}
-
-function confirmBankFee(isExactAmount) {
-  dismissBankReminder();
-  if (!currentReminderBank) return;
-
-  const feeAmount = state.bankFees[currentReminderBank];
-  
-  if (isExactAmount) {
-    const today = new Date().toISOString().split('T')[0];
-    state.transactions.push({
-      id: Date.now().toString(),
-      type: 'expense',
-      amount: feeAmount,
-      date: today,
-      wallet: currentReminderBank,
-      category: 'فواتير',
-      note: `رسوم ${WALLETS[currentReminderBank].name} - شهري`,
-      image: null,
-      createdAt: new Date().toISOString()
-    });
-    save();
-    renderAll();
-    showToast(`✅ تم تسجيل رسوم ${WALLETS[currentReminderBank].name} (${feeAmount} ج)`);
-    
-    setTimeout(checkBankReminders, 1000);
-  } else {
-    showToast('⚠️ راجع كشف الحساب وسجل المبلغ يدوياً');
-    setTimeout(() => {
-      showPage('add');
-      document.getElementById('txWallet').value = currentReminderBank;
-      setType('expense');
-      document.getElementById('txAmount').value = feeAmount;
-      document.getElementById('txNote').value = `رسوم ${WALLETS[currentReminderBank].name} - شهري`;
-    }, 1000);
-  }
-}
-
-function dismissBankReminder() {
-  document.getElementById('bankReminder').classList.remove('show');
+  });
+  return bal;
 }
 
 // ==================== HOME ====================
@@ -932,13 +883,10 @@ function renderHome() {
   const exp = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
   document.getElementById('homeIncome').textContent = fmt(inc);
   document.getElementById('homeExpense').textContent = fmt(exp);
-  
+
   const recent = [...state.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
   const el = document.getElementById('recentList');
-  if (!recent.length) {
-    el.innerHTML = '<div class="empty"><i class="fas fa-inbox"></i>لا توجد عمليات بعد</div>';
-    return;
-  }
+  if (!recent.length) { el.innerHTML = '<div class="empty"><i class="fas fa-inbox"></i>لا توجد عمليات بعد</div>'; return; }
   el.innerHTML = recent.map(tx => txHTML(tx)).join('');
 }
 
@@ -970,99 +918,62 @@ function previewImg(e) {
 
 function saveTransaction() {
   const amount = parseFloat(document.getElementById('txAmount').value);
-  if (!amount || amount <= 0) return showToast('أدخل مبلغ صحيح');
-  
+  const date = document.getElementById('txDate').value;
+  const wallet = document.getElementById('txWallet').value;
+  const category = document.getElementById('txCategory').value;
+  const note = document.getElementById('txNote').value;
+  if (!amount || amount <= 0) return showToast('أدخل مبلغاً صحيحاً');
+  if (!date) return showToast('أدخل التاريخ');
+
   const tx = {
     id: Date.now().toString(),
     type: state.currentType,
-    amount: amount,
-    wallet: document.getElementById('txWallet').value,
-    category: document.getElementById('txCat').value,
-    note: document.getElementById('txNote').value,
-    image: imgData,
-    date: new Date().toISOString().split('T')[0],
+    amount, date, wallet, category, note,
+    image: imgData || null,
     createdAt: new Date().toISOString()
   };
-  
   state.transactions.push(tx);
   save();
   renderAll();
-  
+  showToast('تم حفظ العملية ✓');
+
+  // reset
   document.getElementById('txAmount').value = '';
   document.getElementById('txNote').value = '';
-  imgData = null;
   document.getElementById('imgPreview').style.display = 'none';
   document.getElementById('imgInput').value = '';
-  showToast('تمت الإضافة بنجاح ✓');
+  imgData = null;
   showPage('home');
 }
 
-// ==================== CATEGORIES ====================
-function renderCategories() {
-  const sel = document.getElementById('txCat');
-  sel.innerHTML = state.categories.map(c=>`<option value="${c}">${c}</option>`).join('');
-  
-  const fCat = document.getElementById('filterCat');
-  if(fCat) fCat.innerHTML = '<option value="">كل الفئات</option>' + state.categories.map(c=>`<option value="${c}">${c}</option>`).join('');
-  
-  const list = document.getElementById('catList');
-  if(!list) return;
-  list.innerHTML = state.categories.map((c,i) => `
-    <div class="cat-chip">
-      ${c}
-      <i class="fas fa-times del" onclick="deleteCategory(${i})"></i>
-    </div>
-  `).join('');
+// ==================== HISTORY ====================
+function renderHistory() {
+  const fw = document.getElementById('filterWallet').value;
+  const ft = document.getElementById('filterType').value;
+  const fc = document.getElementById('filterCat').value;
+
+  let txs = [...state.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if (fw) txs = txs.filter(t=>t.wallet===fw);
+  if (ft) txs = txs.filter(t=>t.type===ft);
+  if (fc) txs = txs.filter(t=>t.category===fc);
+
+  const el = document.getElementById('historyList');
+  if (!txs.length) { el.innerHTML = '<div class="empty"><i class="fas fa-search"></i>لا توجد نتائج</div>'; return; }
+  el.innerHTML = txs.map(tx => txHTML(tx, true)).join('');
 }
 
-function addCategory() {
-  const val = document.getElementById('newCatInput').value.trim();
-  if(!val) return;
-  if(state.categories.includes(val)) return showToast('الفئة موجودة بالفعل');
-  state.categories.push(val);
-  save(); renderCategories();
-  document.getElementById('newCatInput').value = '';
-}
-
-function deleteCategory(idx) {
-  if(!confirm('حذف هذه الفئة؟')) return;
-  state.categories.splice(idx, 1);
-  save(); renderCategories();
-}
-
-// ==================== HISTORY / SHARED UI ====================
-function txHTML(tx) {
-  const isTransfer = tx.category === 'تحويل';
-  const w = WALLETS[tx.wallet] || { icon:'?', name:'?' };
+function txHTML(tx, showDel=false) {
+  const w = WALLETS[tx.wallet] || { name: tx.wallet, icon: '💳' };
+  const catIcon = CAT_ICONS[tx.category] || '📌';
   const dateStr = new Date(tx.date).toLocaleDateString('ar-EG');
-  const imgBtn = tx.image ? `<button class="btn btn-sm" onclick="viewImg('${tx.id}')"><i class="fas fa-image"></i></button>` : '';
-  const delBtn = `<button class="btn btn-sm btn-danger" onclick="deleteTx('${tx.id}')"><i class="fas fa-trash"></i></button>`;
-  
-  if (isTransfer) {
-     return `
-      <div class="tx-item">
-        <div class="tx-icon" style="background:rgba(255,123,46,0.15);color:var(--accent);font-size:1rem;">
-          <i class="fas fa-exchange-alt"></i>
-        </div>
-        <div class="tx-info">
-          <div class="tx-cat">${w.icon} ${w.name.split(' ')[0]}</div>
-          <div class="tx-sub">${dateStr} · ${tx.note||''}</div>
-        </div>
-        <div class="tx-right">
-          <div class="tx-amt" style="color:var(--text)">${fmt(tx.amount)}</div>
-          <div class="tx-actions" style="margin-top:4px;">${delBtn}</div>
-        </div>
-      </div>`;
-  }
-  
+  const imgBtn = tx.image ? `<button class="btn btn-sm" style="background:var(--surface2);color:var(--text)" onclick="viewImg('${tx.id}')"><i class="fas fa-image"></i></button>` : '';
+  const delBtn = showDel ? `<button class="btn btn-sm btn-danger" onclick="deleteTx('${tx.id}')"><i class="fas fa-trash"></i></button>` : '';
   return `
     <div class="tx-item">
-      <div class="tx-icon ${tx.type}">
-        <i class="fas ${tx.type==='expense'?'fa-arrow-down':'fa-arrow-up'}"></i>
-      </div>
+      <div class="tx-icon ${tx.type}">${catIcon}</div>
       <div class="tx-info">
         <div class="tx-cat">${tx.category}</div>
-        <div class="tx-sub">${w.icon} ${w.name} ${tx.note ? ' · '+tx.note : ''}</div>
+        <div class="tx-sub">${w.icon} ${w.name}${tx.note ? ' · '+tx.note : ''}</div>
       </div>
       <div class="tx-right">
         <div class="tx-amt ${tx.type}">${tx.type==='expense'?'-':'+'} ${fmt(tx.amount)}</div>
@@ -1075,26 +986,8 @@ function txHTML(tx) {
 function deleteTx(id) {
   if (!confirm('حذف هذه العملية؟')) return;
   state.transactions = state.transactions.filter(t=>t.id!==id);
-  save(); renderAll(); showToast('تم الحذف');
-}
-
-function renderHistory() {
-  const fType = document.getElementById('filterType').value;
-  const fWallet = document.getElementById('filterWallet').value;
-  const fCat = document.getElementById('filterCat').value;
-  
-  let txs = [...state.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  
-  if(fType) txs = txs.filter(t=>t.type===fType);
-  if(fWallet) txs = txs.filter(t=>t.wallet===fWallet);
-  if(fCat) txs = txs.filter(t=>t.category===fCat);
-  
-  const el = document.getElementById('historyList');
-  if(!txs.length) {
-    el.innerHTML = '<div class="empty"><i class="fas fa-search"></i>لا توجد نتائج</div>';
-    return;
-  }
-  el.innerHTML = txs.map(t=>txHTML(t)).join('');
+  save(); renderAll();
+  showToast('تم الحذف');
 }
 
 function viewImg(id) {
@@ -1104,9 +997,7 @@ function viewImg(id) {
   document.getElementById('receiptModal').classList.add('open');
 }
 
-function closeModal() {
-  document.getElementById('receiptModal').classList.remove('open');
-}
+function closeModal() { document.getElementById('receiptModal').classList.remove('open'); }
 
 // ==================== STATS ====================
 function setPeriod(p) {
@@ -1127,47 +1018,98 @@ function getFilteredTxs() {
   });
 }
 
+const PERIOD_LABELS = { day:'اليوم', month:'الشهر', year:'السنة' };
+
 function renderStats() {
   const txs = getFilteredTxs();
   const inc = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const exp = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  
-  document.getElementById('statTotalInc').textContent = fmt(inc);
-  document.getElementById('statTotalExp').textContent = fmt(exp);
-  document.getElementById('statNet').textContent = fmt(inc - exp);
+  const net = inc - exp;
+
+  document.getElementById('statNet').textContent = fmt(net);
+  document.getElementById('statNetLabel').textContent = `صافي ${PERIOD_LABELS[state.statPeriod]}`;
+  document.getElementById('statNet').style.color = net >= 0 ? 'var(--accent3)' : 'var(--accent2)';
+  document.getElementById('statIncome').textContent = fmt(inc);
+  document.getElementById('statExpense').textContent = fmt(exp);
   document.getElementById('statCount').textContent = txs.length;
-  document.getElementById('statAvg').textContent = txs.length ? fmt(exp/txs.length) : '0 ج';
-  
-  // Charts logic
-  const exps = txs.filter(t=>t.type==='expense' && t.category!=='تحويل');
-  const catMap = {};
-  const walMap = {};
-  exps.forEach(t=>{
-    catMap[t.category] = (catMap[t.category]||0) + t.amount;
-    walMap[t.wallet] = (walMap[t.wallet]||0) + t.amount;
-  });
-  
-  const renderBars = (map, elId) => {
-    const el = document.getElementById(elId);
-    const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
-    const max = sorted[0]?.[1] || 1;
-    el.innerHTML = sorted.map(([k,v]) => {
-      const pct = (v/max)*100;
-      const wIcon = elId==='walletChart' && WALLETS[k] ? WALLETS[k].icon : '';
-      const lbl = elId==='walletChart' && WALLETS[k] ? WALLETS[k].name.split(' ')[0] : k;
+  const expTxs = txs.filter(t=>t.type==='expense');
+  document.getElementById('statAvg').textContent = fmt(expTxs.length ? exp/expTxs.length : 0);
+
+  // Category bar chart
+  const catTotals = {};
+  expTxs.forEach(t=>{ catTotals[t.category]=(catTotals[t.category]||0)+t.amount; });
+  const maxCat = Math.max(...Object.values(catTotals), 1);
+  document.getElementById('catChart').innerHTML = Object.entries(catTotals)
+    .sort((a,b)=>b[1]-a[1]).slice(0,6)
+    .map(([cat,amt])=>`
+      <div class="bar-row">
+        <div class="bar-label">${CAT_ICONS[cat]||'📌'} ${cat}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(amt/maxCat*100).toFixed(1)}%;background:var(--accent2)"></div></div>
+        <div class="bar-val">${fmt(amt)}</div>
+      </div>`).join('') || '<div style="color:var(--text2);font-size:0.85rem;">لا توجد بيانات</div>';
+
+  // Wallet bar chart
+  const walletTotals = {};
+  expTxs.forEach(t=>{ walletTotals[t.wallet]=(walletTotals[t.wallet]||0)+t.amount; });
+  const maxW = Math.max(...Object.values(walletTotals), 1);
+  document.getElementById('walletChart').innerHTML = Object.entries(walletTotals)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([wkey,amt])=>{
+      const w = WALLETS[wkey]||{name:wkey,icon:'💳',color:'#888'};
       return `
         <div class="bar-row">
-          <div class="bar-label">${wIcon} ${lbl}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--accent2)"></div></div>
-          <div class="bar-val">${fmt(v)}</div>
-        </div>
-      `;
-    }).join('');
-    if(!sorted.length) el.innerHTML = '<div style="font-size:0.8rem;color:var(--text2);text-align:center;">لا توجد بيانات</div>';
-  };
-  
-  renderBars(catMap, 'catChart');
-  renderBars(walMap, 'walletChart');
+          <div class="bar-label">${w.icon} ${w.name.split(' ')[0]}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(amt/maxW*100).toFixed(1)}%;background:${w.color}"></div></div>
+          <div class="bar-val">${fmt(amt)}</div>
+        </div>`;
+    }).join('') || '<div style="color:var(--text2);font-size:0.85rem;">لا توجد بيانات</div>';
+}
+
+// ==================== CATEGORIES ====================
+function populateCategorySelects() {
+  const sel = document.getElementById('txCategory');
+  const fc = document.getElementById('filterCat');
+  const opts = state.categories.map(c=>`<option value="${c}">${CAT_ICONS[c]||'📌'} ${c}</option>`).join('');
+  sel.innerHTML = opts;
+  fc.innerHTML = '<option value="">كل الفئات</option>' + opts;
+}
+
+function renderCategories() {
+  const el = document.getElementById('catList');
+  el.innerHTML = state.categories.map(c=>`
+    <div class="cat-chip">
+      ${CAT_ICONS[c]||'📌'} ${c}
+      <span class="del" onclick="delCat('${c}')">✕</span>
+    </div>`).join('');
+}
+
+function addCategory() {
+  const val = document.getElementById('newCatInput').value.trim();
+  if (!val) return;
+  if (state.categories.includes(val)) return showToast('الفئة موجودة مسبقاً');
+  state.categories.push(val);
+  document.getElementById('newCatInput').value = '';
+  save(); renderAll();
+}
+
+function delCat(c) {
+  state.categories = state.categories.filter(x=>x!==c);
+  save(); renderAll();
+}
+
+// ==================== BALANCE FORM ====================
+function renderBalanceForm() {
+  const el = document.getElementById('walletBalanceForm');
+  el.innerHTML = Object.entries(WALLETS).map(([key,w])=>`
+    <div class="form-group">
+      <label>${w.icon} ${w.name} - الرصيد الابتدائي</label>
+      <input type="number" value="${state.balances[key]||0}" onchange="setBalance('${key}',this.value)" inputmode="decimal"/>
+    </div>`).join('');
+}
+
+function setBalance(key, val) {
+  state.balances[key] = parseFloat(val)||0;
+  save(); renderWallets();
 }
 
 // ==================== NAVIGATION ====================
@@ -1175,94 +1117,116 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const idx = ['home','add','transfer','history','stats','installments','settings'].indexOf(name);
-  if(idx >= 0) document.querySelectorAll('.tab')[idx].classList.add('active');
-  
+  const idx = ['home','add','transfer','history','stats','settings','installments'].indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
   if (name==='stats') renderStats();
   if (name==='history') renderHistory();
   if (name==='transfer') { updateTransferUI(); renderTransferList(); }
   if (name==='installments') renderInstallments();
 }
 
-function openWalletHistory(walletKey) {
-  showPage('history');
-  document.getElementById('filterWallet').value = walletKey;
-  document.getElementById('filterType').value = '';
-  document.getElementById('filterCat').value = '';
-  renderHistory();
-}
-
 // ==================== TRANSFERS ====================
 function updateTransferUI() {
   const fromKey = document.getElementById('trFrom').value;
-  const toKey = document.getElementById('trTo').value;
-  if(!WALLETS[fromKey] || !WALLETS[toKey]) return;
+  const toKey   = document.getElementById('trTo').value;
+  const amount  = parseFloat(document.getElementById('trAmount').value) || 0;
   const fromW = WALLETS[fromKey];
-  const toW = WALLETS[toKey];
-  
+  const toW   = WALLETS[toKey];
+
   document.getElementById('trFromIcon').textContent = fromW.icon;
   document.getElementById('trFromName').textContent = fromW.name.split(' ')[0];
-  document.getElementById('trToIcon').textContent = toW.icon;
-  document.getElementById('trToName').textContent = toW.name.split(' ')[0];
-  
-  document.getElementById('trFromBal').textContent = fmt(calcWalletBalance(fromKey));
-  document.getElementById('trToBal').textContent = fmt(calcWalletBalance(toKey));
+  document.getElementById('trToIcon').textContent   = toW.icon;
+  document.getElementById('trToName').textContent   = toW.name.split(' ')[0];
+
+  const fromBal = calcWalletBalance(fromKey);
+  const toBal   = calcWalletBalance(toKey);
+  document.getElementById('trFromBal').textContent = fmt(fromBal);
+  document.getElementById('trToBal').textContent   = fmt(toBal);
+  document.getElementById('trFromBal').style.color = (amount > fromBal && amount > 0) ? 'var(--accent2)' : 'var(--accent)';
 }
 
 function swapWallets() {
-  const f = document.getElementById('trFrom').value;
-  const t = document.getElementById('trTo').value;
-  document.getElementById('trFrom').value = t;
-  document.getElementById('trTo').value = f;
+  const from = document.getElementById('trFrom');
+  const to   = document.getElementById('trTo');
+  const tmp  = from.value;
+  from.value = to.value;
+  to.value   = tmp;
   updateTransferUI();
 }
 
 function saveTransfer() {
-  const from = document.getElementById('trFrom').value;
-  const to = document.getElementById('trTo').value;
-  const amt = parseFloat(document.getElementById('trAmount').value);
-  const note = document.getElementById('trNote').value;
-  
-  if(from===to) return showToast('لا يمكن التحويل لنفس المحفظة');
-  if(!amt || amt<=0) return showToast('أدخل مبلغ صحيح');
-  
-  const d = new Date().toISOString().split('T')[0];
-  const transferId = Date.now().toString();
-  
+  const fromKey = document.getElementById('trFrom').value;
+  const toKey   = document.getElementById('trTo').value;
+  const amount  = parseFloat(document.getElementById('trAmount').value);
+  const date    = document.getElementById('trDate').value;
+  const note    = document.getElementById('trNote').value;
+
+  if (fromKey === toKey) return showToast('اختار محفظتين مختلفتين');
+  if (!amount || amount <= 0) return showToast('أدخل مبلغاً صحيحاً');
+  if (!date) return showToast('أدخل التاريخ');
+
+  const fromBal = calcWalletBalance(fromKey);
+  if (amount > fromBal) {
+    if (!confirm(`الرصيد الحالي ${fmt(fromBal)} أقل من المبلغ. تكمل؟`)) return;
+  }
+
+  const id = Date.now().toString();
+  // سجل خروج من المحفظة الأولى
   state.transactions.push({
-    id: transferId + '_out', transferId: transferId,
-    type: 'expense', amount: amt, wallet: from, category: 'تحويل', note: `إلى ${WALLETS[to].name} ${note?'· '+note:''}`, date: d, image: null
+    id: id + '_out',
+    type: 'expense',
+    amount, date,
+    wallet: fromKey,
+    category: 'تحويل',
+    note: `تحويل إلى ${WALLETS[toKey].name}${note ? ' · ' + note : ''}`,
+    isTransfer: true,
+    transferId: id,
+    image: null,
+    createdAt: new Date().toISOString()
   });
+  // سجل دخول للمحفظة الثانية
   state.transactions.push({
-    id: transferId + '_in', transferId: transferId,
-    type: 'income', amount: amt, wallet: to, category: 'تحويل', note: `من ${WALLETS[from].name} ${note?'· '+note:''}`, date: d, image: null
+    id: id + '_in',
+    type: 'income',
+    amount, date,
+    wallet: toKey,
+    category: 'تحويل',
+    note: `تحويل من ${WALLETS[fromKey].name}${note ? ' · ' + note : ''}`,
+    isTransfer: true,
+    transferId: id,
+    image: null,
+    createdAt: new Date().toISOString()
   });
-  
+
   save(); renderAll();
+  showToast(`تم تحويل ${fmt(amount)} ✓`);
+
   document.getElementById('trAmount').value = '';
-  document.getElementById('trNote').value = '';
-  showToast('تم التحويل بنجاح');
+  document.getElementById('trNote').value   = '';
   updateTransferUI();
   renderTransferList();
 }
 
 function renderTransferList() {
-  const trs = {};
-  state.transactions.filter(t=>t.category==='تحويل' && t.transferId).forEach(t=>{
-    if(!trs[t.transferId]) trs[t.transferId] = {};
-    if(t.type==='expense') trs[t.transferId].out = t;
-    if(t.type==='income') trs[t.transferId].in = t;
+  const transfers = {};
+  state.transactions.filter(t=>t.isTransfer).forEach(t=>{
+    if (!transfers[t.transferId]) transfers[t.transferId] = {};
+    if (t.type==='expense') transfers[t.transferId].out = t;
+    else transfers[t.transferId].in = t;
   });
-  
-  const sorted = Object.values(trs).sort((a,b)=>new Date((b.out||b.in).date) - new Date((a.out||a.in).date)).slice(0,10);
-  
+
   const el = document.getElementById('transferList');
-  if(!sorted.length) return el.innerHTML = '<div class="empty"><i class="fas fa-exchange-alt"></i>لا توجد تحويلات</div>';
-  
-  el.innerHTML = sorted.map(tr => {
+  const list = Object.values(transfers).sort((a,b)=>new Date((b.out||b.in).date)-new Date((a.out||a.in).date));
+
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><i class="fas fa-exchange-alt"></i>لا توجد تحويلات بعد</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(tr => {
     const tx = tr.out || tr.in;
     const fromW = tr.out ? WALLETS[tr.out.wallet] : { icon:'?', name:'?' };
-    const toW = tr.in ? WALLETS[tr.in.wallet] : { icon:'?', name:'?' };
+    const toW   = tr.in  ? WALLETS[tr.in.wallet]  : { icon:'?', name:'?' };
     const dateStr = new Date(tx.date).toLocaleDateString('ar-EG');
     const note = tr.out?.note?.split(' · ')[1] || '';
     return `
@@ -1286,8 +1250,339 @@ function renderTransferList() {
 
 function deleteTransfer(transferId) {
   if (!confirm('حذف هذا التحويل؟')) return;
-  state.transactions = state.transactions.filter(t=>t.transferId!==transferId);
-  save(); renderAll(); updateTransferUI(); renderTransferList(); showToast('تم الحذف');
+  state.transactions = state.transactions.filter(t=>t.transferId !== transferId);
+  save(); renderAll(); renderTransferList();
+  showToast('تم حذف التحويل');
+}
+
+// ==================== GOOGLE DRIVE ====================
+const CLIENT_ID = '813333077586-79tfs08h2olmjnbgmj6oj3a6srhe25br.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const FILE_NAME = 'mahfazati_data.json';
+
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+let autoSyncInterval = null;
+let isSyncing = false;
+
+function gapiLoaded() {
+  gapi.load('client', initGapiClient);
+}
+
+async function initGapiClient() {
+  await gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
+  gapiInited = true;
+  maybeEnableDrive();
+}
+
+function gisLoaded() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { showToast('فشل تسجيل الدخول'); return; }
+      // حفظ وقت انتهاء الـ token
+      const expiresAt = Date.now() + (resp.expires_in * 1000);
+      localStorage.setItem('mahfazati_token_expiry', expiresAt);
+      state.driveConnected = true;
+      updateDriveUI();
+      await loadFromDrive();
+      save();
+      startAutoSync();
+    }
+  });
+  gisInited = true;
+  maybeEnableDrive();
+}
+
+function maybeEnableDrive() {
+  if (gapiInited && gisInited && state.driveConnected) {
+    // لو الاتنين جاهزين والمستخدم كان متصل قبل كده، نجدد الـ token تلقائياً
+    silentTokenRefresh();
+  }
+}
+
+// تجديد الـ token بدون popup لو المستخدم كان متصل قبل كده
+function silentTokenRefresh() {
+  if (!tokenClient) return;
+  tokenClient.requestAccessToken({ prompt: '' }); // prompt فاضي = silent
+}
+
+function toggleDrive() {
+  if (!gapiInited || !gisInited) {
+    showToast('جاري تحميل Google Drive...');
+    loadGoogleAPIs();
+    return;
+  }
+  if (state.driveConnected) {
+    google.accounts.oauth2.revoke(gapi.client.getToken()?.access_token, ()=>{});
+    gapi.client.setToken(null);
+    state.driveConnected = false;
+    state.driveFileId = null;
+    localStorage.removeItem('mahfazati_token_expiry');
+    stopAutoSync();
+    save();
+    updateDriveUI();
+    showToast('تم قطع الاتصال بـ Drive');
+  } else {
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+}
+
+function loadGoogleAPIs() {
+  if (!document.getElementById('gapiScript')) {
+    const s = document.createElement('script');
+    s.id = 'gapiScript';
+    s.src = 'https://apis.google.com/js/api.js';
+    s.onload = gapiLoaded;
+    document.head.appendChild(s);
+  }
+  if (!document.getElementById('gisScript')) {
+    const s = document.createElement('script');
+    s.id = 'gisScript';
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = gisLoaded;
+    document.head.appendChild(s);
+  }
+}
+
+// ---- Auto-sync كل دقيقة ----
+function startAutoSync() {
+  stopAutoSync();
+  // pull من Drive كل 60 ثانية لو التطبيق مفتوح في أكتر من مكان
+  autoSyncInterval = setInterval(async () => {
+    if (state.driveConnected && gapiInited && !isSyncing) {
+      await pullFromDrive();
+    }
+  }, 60000);
+}
+
+function stopAutoSync() {
+  if (autoSyncInterval) { clearInterval(autoSyncInterval); autoSyncInterval = null; }
+}
+
+// Pull الداتا من Drive وقارنها بالـ local — لو في حاجة جديدة خد منها
+async function pullFromDrive() {
+  if (isSyncing) return;
+  isSyncing = true;
+  try {
+    const res = await gapi.client.drive.files.list({
+      q: `name='${FILE_NAME}' and trashed=false`,
+      fields: 'files(id,name,modifiedTime)',
+      pageSize: 1
+    });
+    const files = res.result.files;
+    if (files && files.length > 0) {
+      const remoteModified = new Date(files[0].modifiedTime).getTime();
+      const localModified = state.lastSaved || 0;
+      // لو Drive أحدث من الـ local، اجيب منه
+      if (remoteModified > localModified) {
+        state.driveFileId = files[0].id;
+        const content = await gapi.client.drive.files.get({ fileId: state.driveFileId, alt: 'media' });
+        const remote = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
+        Object.assign(state, remote);
+        renderAll();
+        showToast('🔄 تم تحديث البيانات من Drive');
+      }
+    }
+  } catch(e) { console.warn('Drive pull error', e); }
+  finally { isSyncing = false; }
+}
+
+async function syncDrive() {
+  if (!state.driveConnected || !gapiInited || isSyncing) return;
+  isSyncing = true;
+  try {
+    state.lastSaved = Date.now(); // timestamp للمقارنة عند الـ pull
+    const data = JSON.stringify(state);
+    if (state.driveFileId) {
+      await gapi.client.request({
+        path: `https://www.googleapis.com/upload/drive/v3/files/${state.driveFileId}`,
+        method: 'PATCH',
+        params: { uploadType: 'media' },
+        body: data
+      });
+    } else {
+      const meta = await gapi.client.drive.files.create({ resource: { name: FILE_NAME }, fields: 'id' });
+      state.driveFileId = meta.result.id;
+      await gapi.client.request({
+        path: `https://www.googleapis.com/upload/drive/v3/files/${state.driveFileId}`,
+        method: 'PATCH',
+        params: { uploadType: 'media' },
+        body: data
+      });
+      localStorage.setItem('mahfazati_v2', JSON.stringify(state));
+    }
+  } catch(e) { console.warn('Drive sync error', e); }
+  finally { isSyncing = false; }
+}
+
+async function loadFromDrive() {
+  try {
+    const res = await gapi.client.drive.files.list({ q: `name='${FILE_NAME}' and trashed=false`, fields: 'files(id,name)', pageSize: 1 });
+    const files = res.result.files;
+    if (files && files.length > 0) {
+      state.driveFileId = files[0].id;
+      const content = await gapi.client.drive.files.get({ fileId: state.driveFileId, alt: 'media' });
+      const remote = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
+      Object.assign(state, remote);
+      renderAll();
+      showToast('تم تحميل البيانات من Drive ✓');
+    } else {
+      showToast('ملف جديد سيتم إنشاؤه في Drive');
+    }
+  } catch(e) { console.warn('Drive load error', e); }
+}
+
+function updateDriveUI() {
+  const btn = document.getElementById('gdriveBtn');
+  const txt = document.getElementById('gdriveTxt');
+  const stxt = document.getElementById('driveSettingTxt');
+  if (state.driveConnected) {
+    btn.classList.add('connected');
+    txt.textContent = 'Drive متصل ✓';
+    if(stxt) stxt.textContent = 'قطع الاتصال بـ Drive';
+  } else {
+    btn.classList.remove('connected');
+    txt.textContent = 'ربط Drive';
+    if(stxt) stxt.textContent = 'ربط Google Drive';
+  }
+}
+
+// تحميل الـ APIs تلقائياً عند فتح التطبيق لو كان متصل قبل كده
+function initDriveIfPreviouslyConnected() {
+  if (state.driveConnected) {
+    loadGoogleAPIs();
+  }
+}
+
+// ==================== EXPORT / IMPORT ====================
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `mahfazati_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+function importData() { document.getElementById('importInput').click(); }
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      Object.assign(state, d);
+      save(); renderAll();
+      showToast('تم الاستيراد بنجاح ✓');
+    } catch { showToast('ملف غير صالح'); }
+  };
+  r.readAsText(file);
+}
+
+// ==================== HELPERS ====================
+function fmt(n) { return (Math.round(n*100)/100).toLocaleString('ar-EG') + ' ج'; }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ==================== START ====================
+init();
+updateDriveUI();
+initDriveIfPreviouslyConnected();
+
+// ==================== HIDE NUMBERS ====================
+let numbersHidden = false;
+function toggleHideNumbers() {
+  numbersHidden = !numbersHidden;
+  document.body.classList.toggle('numbers-hidden', numbersHidden);
+  document.getElementById('hideIcon').className = numbersHidden ? 'fas fa-eye' : 'fas fa-question';
+  document.getElementById('hideBtn').style.borderColor = numbersHidden ? 'var(--accent2)' : 'var(--border)';
+}
+
+// ==================== DARK / LIGHT MODE ====================
+let isLight = false;
+function toggleTheme() {
+  isLight = !isLight;
+  document.body.classList.toggle('light-mode', isLight);
+  document.getElementById('themeIcon').className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+  localStorage.setItem('mahfazati_theme', isLight ? 'light' : 'dark');
+}
+// استرجاع الـ theme عند الفتح
+(function() {
+  if (localStorage.getItem('mahfazati_theme') === 'light') {
+    isLight = true;
+    document.body.classList.add('light-mode');
+    setTimeout(()=>{ if(document.getElementById('themeIcon')) document.getElementById('themeIcon').className = 'fas fa-sun'; }, 0);
+  }
+})();
+
+// ==================== CAIRO INSTAPAY REMINDER ====================
+function checkCairoReminder() {
+  const now = new Date();
+  const lastCheck = localStorage.getItem('cairo_last_check');
+  const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+  if (lastCheck === monthKey) return;
+  // ظهر التذكير في أول يوم أو بعد أول مرة فتح في الشهر
+  setTimeout(() => {
+    document.getElementById('cairoReminder').classList.add('show');
+  }, 2000);
+}
+
+function confirmCairoFee(isCorrect) {
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+  localStorage.setItem('cairo_last_check', monthKey);
+  document.getElementById('cairoReminder').classList.remove('show');
+
+  if (isCorrect) {
+    // تسجيل الـ 5 جنيه تلقائياً
+    const today = now.toISOString().split('T')[0];
+    state.transactions.push({
+      id: Date.now().toString(),
+      type: 'expense',
+      amount: 5,
+      date: today,
+      wallet: 'cairo',
+      category: 'فواتير',
+      note: 'رسوم انستاباي بنك القاهرة - شهري',
+      image: null,
+      createdAt: new Date().toISOString()
+    });
+    save(); renderAll();
+    showToast('✅ تم تسجيل رسوم انستاباي القاهرة (5 ج)');
+  } else {
+    showToast('⚠️ راجع كشف الحساب وسجل المبلغ يدوياً');
+    // فتح صفحة الإضافة مع اختيار محفظة القاهرة
+    setTimeout(() => {
+      showPage('add');
+      document.getElementById('txWallet').value = 'cairo';
+      setType('expense');
+    }, 1000);
+  }
+}
+
+function dismissCairoReminder() {
+  document.getElementById('cairoReminder').classList.remove('show');
+}
+
+// تشغيل تذكير القاهرة
+checkCairoReminder();
+
+// ==================== WALLET CLICK → HISTORY =====================
+function openWalletHistory(walletKey) {
+  showPage('history');
+  document.getElementById('filterWallet').value = walletKey;
+  document.getElementById('filterType').value = '';
+  document.getElementById('filterCat').value = '';
+  renderHistory();
 }
 
 // ==================== INSTALLMENTS ====================
@@ -1305,51 +1600,88 @@ function previewInstImg(e) {
   reader.readAsDataURL(file);
 }
 
-function addInstallment() {
+function calcInstallment() {
+  const total = parseFloat(document.getElementById('instTotal').value) || 0;
+  const count = parseInt(document.getElementById('instCount').value) || 0;
+  const box = document.getElementById('instCalcBox');
+  if (total > 0 && count > 0) {
+    box.style.display = 'block';
+    document.getElementById('instTotalShow').textContent = fmt(total);
+    document.getElementById('instCountShow').textContent = count;
+    document.getElementById('instMonthly').textContent = fmt(total / count);
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+function saveInstallment() {
   const name = document.getElementById('instName').value.trim();
   const total = parseFloat(document.getElementById('instTotal').value);
   const count = parseInt(document.getElementById('instCount').value);
+  const startDate = document.getElementById('instStartDate').value;
   const wallet = document.getElementById('instWallet').value;
-  
-  if(!name || !total || !count) return showToast('أكمل البيانات الأساسية');
-  
-  state.installments.push({
+  const note = document.getElementById('instNote').value;
+
+  if (!name) return showToast('أدخل اسم المنتج');
+  if (!total || total <= 0) return showToast('أدخل إجمالي المبلغ');
+  if (!count || count <= 0) return showToast('أدخل عدد الأقساط');
+  if (!startDate) return showToast('أدخل تاريخ أول قسط');
+
+  if (!state.installments) state.installments = [];
+
+  const inst = {
     id: Date.now().toString(),
-    name, total, count, wallet, paid: 0, image: instImgData, createdAt: new Date().toISOString()
-  });
-  
-  save(); renderInstallments();
-  document.getElementById('instName').value='';
-  document.getElementById('instTotal').value='';
-  document.getElementById('instCount').value='';
+    name, total, count, startDate, wallet, note,
+    image: instImgData || null,
+    paid: 0, // عدد الأقساط المدفوعة
+    createdAt: new Date().toISOString()
+  };
+  state.installments.push(inst);
+  save();
+  renderInstallments();
+  showToast(`✅ تم حفظ تقسيط "${name}"`);
+
+  // reset
+  document.getElementById('instName').value = '';
+  document.getElementById('instTotal').value = '';
+  document.getElementById('instCount').value = '';
+  document.getElementById('instNote').value = '';
+  document.getElementById('instImgPreview').style.display = 'none';
+  document.getElementById('instImgInput').value = '';
+  document.getElementById('instCalcBox').style.display = 'none';
   instImgData = null;
-  document.getElementById('instImgPreview').style.display='none';
-  showToast('تمت الإضافة بنجاح');
 }
 
 function renderInstallments() {
+  if (!state.installments) state.installments = [];
   const el = document.getElementById('installmentsList');
-  if(!state.installments || !state.installments.length) return el.innerHTML = '<div class="empty">لا توجد أقساط</div>';
-  
+  if (!state.installments.length) {
+    el.innerHTML = '<div class="empty"><i class="fas fa-credit-card"></i>لا توجد تقسيطات بعد</div>';
+    return;
+  }
   el.innerHTML = state.installments.map(inst => {
+    const monthly = inst.total / inst.count;
+    const remaining = inst.count - inst.paid;
+    const remainingAmt = remaining * monthly;
     const progress = inst.count > 0 ? (inst.paid / inst.count * 100).toFixed(0) : 0;
     const w = WALLETS[inst.wallet] || { icon:'💳', name: inst.wallet };
     return `
       <div style="padding:14px 0;border-bottom:1px solid var(--border);">
         <div style="display:flex;align-items:center;gap:12px;">
-          ${inst.image ? `<img src="${inst.image}" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0;cursor:pointer" onclick="viewInstImg('${inst.id}')"/>` : `<div style="width:48px;height:48px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">📦</div>`}
-          <div style="flex:1;">
-            <div style="font-weight:700;">${inst.name}</div>
-            <div style="font-size:0.75rem;color:var(--text2);margin-top:2px;">${w.icon} ${w.name} · متبقي ${inst.count - inst.paid} أشهر</div>
-            <div style="margin-top:8px;background:var(--surface2);height:6px;border-radius:3px;overflow:hidden;">
-              <div style="width:${progress}%;background:var(--accent);height:100%;"></div>
+          ${inst.image ? `<img src="${inst.image}" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0;cursor:pointer;" onclick="viewInstImg('${inst.id}')"/>` : `<div style="width:48px;height:48px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">💳</div>`}
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:0.95rem;">${inst.name}</div>
+            <div style="font-size:0.75rem;color:var(--text2);margin-top:2px;">${w.icon} ${w.name} · ${new Date(inst.startDate).toLocaleDateString('ar-EG')}</div>
+            <div style="margin-top:6px;background:var(--surface2);border-radius:6px;height:6px;overflow:hidden;">
+              <div style="height:100%;background:var(--accent3);border-radius:6px;width:${progress}%;transition:width 0.5s;"></div>
             </div>
-            <div style="font-size:0.7rem;color:var(--text2);margin-top:4px;text-align:right;">${progress}% مسدد (${inst.paid}/${inst.count})</div>
+            <div style="font-size:0.72rem;color:var(--text2);margin-top:3px;">${inst.paid} من ${inst.count} قسط · متبقي: ${fmt(remainingAmt)}</div>
           </div>
-          <div style="text-align:left;">
-            <div style="font-weight:700;color:var(--accent2);">${fmt(inst.total / inst.count)} / ش</div>
-            <div style="margin-top:8px;display:flex;gap:6px;">
-              <button class="btn btn-sm btn-success" onclick="payInstallment('${inst.id}')"><i class="fas fa-check"></i> دفع</button>
+          <div style="text-align:left;flex-shrink:0;">
+            <div style="font-size:0.72rem;color:var(--text2);">القسط</div>
+            <div style="font-weight:800;color:var(--accent);font-size:1rem;">${fmt(monthly)}</div>
+            <div style="display:flex;gap:4px;margin-top:4px;">
+              ${remaining > 0 ? `<button class="btn btn-sm btn-success" onclick="payInstallment('${inst.id}')"><i class="fas fa-check"></i></button>` : ''}
               <button class="btn btn-sm btn-danger" onclick="deleteInstallment('${inst.id}')"><i class="fas fa-trash"></i></button>
             </div>
           </div>
@@ -1363,6 +1695,7 @@ function payInstallment(id) {
   if (!inst) return;
   if (inst.paid >= inst.count) return showToast('تم سداد كل الأقساط!');
 
+  // تسجيل القسط كمصروف
   const monthly = inst.total / inst.count;
   const today = new Date().toISOString().split('T')[0];
   state.transactions.push({
@@ -1389,57 +1722,14 @@ function viewInstImg(id) {
   document.getElementById('receiptModal').classList.add('open');
 }
 
-function closeInstModal() {
-  document.getElementById('instDetailModal').classList.remove('open');
-}
-
 function deleteInstallment(id) {
-  if(!confirm('حذف هذا القسط بالكامل؟')) return;
-  state.installments = state.installments.filter(i=>i.id!==id);
-  save(); renderInstallments(); showToast('تم الحذف');
+  if (!confirm('حذف هذا التقسيط؟')) return;
+  state.installments = state.installments.filter(i => i.id !== id);
+  save(); renderInstallments();
+  showToast('تم الحذف');
 }
 
-// ==================== HELPERS ====================
-function fmt(n) { return (Math.round(n*100)/100).toLocaleString('ar-EG') + ' ج'; }
-
-function exportData() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `mahfazati_backup_${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-}
-
-function importData() {
-  document.getElementById('importInput').click();
-}
-
-function handleImport(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const r = new FileReader();
-  r.onload = ev => {
-    try {
-      const d = JSON.parse(ev.target.result);
-      Object.assign(state, d);
-      save(); renderAll(); showToast('تم الاستيراد بنجاح ✓');
-    } catch {
-      showToast('ملف غير صالح');
-    }
-  };
-  r.readAsText(file);
-}
-
-// ==================== DRIVE SYNC (Mock / Placholder for API) ====================
-// These are stubs for your actual Drive API logic which is assumed to be handled elsewhere
-let isSyncing = false;
-function toggleDrive() {
-  showToast('جوجل درايف غير مفعل في هذه النسخة');
-}
-function syncToDrive() {}
-
-// INIT
-init();
+function closeInstModal() { document.getElementById('instDetailModal').classList.remove('open'); }
 </script>
 </body>
 </html>
