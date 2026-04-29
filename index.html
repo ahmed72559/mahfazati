@@ -872,23 +872,148 @@ let state = {
   driveFileId: null,
 };
 
-// ==================== INIT ====================
-function init() {
+// ==================== INDEXEDDB (للصور) ====================
+let idb = null;
+
+function openIDB() {
+  return new Promise((resolve, reject) => {
+    if (idb) return resolve(idb);
+    const req = indexedDB.open('mahfazati_idb', 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('images')) db.createObjectStore('images');
+    };
+    req.onsuccess = e => { idb = e.target.result; resolve(idb); };
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+async function idbSet(key, val) {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images', 'readwrite');
+    tx.objectStore('images').put(val, key);
+    tx.oncomplete = resolve;
+    tx.onerror    = () => reject(tx.error);
+  });
+}
+
+async function idbGet(key) {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images', 'readonly');
+    const req = tx.objectStore('images').get(key);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+async function idbGetAll() {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images', 'readonly');
+    const store = tx.objectStore('images');
+    const keys = [], vals = [];
+    store.openCursor().onsuccess = e => {
+      const cursor = e.target.result;
+      if (cursor) { keys.push(cursor.key); vals.push(cursor.value); cursor.continue(); }
+      else resolve(Object.fromEntries(keys.map((k,i)=>[k,vals[i]])));
+    };
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function idbDelete(key) {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images', 'readwrite');
+    tx.objectStore('images').delete(key);
+    tx.oncomplete = resolve;
+    tx.onerror    = () => reject(tx.error);
+  });
+}
+
+async function idbClear() {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images', 'readwrite');
+    tx.objectStore('images').clear();
+    tx.oncomplete = resolve;
+    tx.onerror    = () => reject(tx.error);
+  });
+}
+
+// ==================== SAVE / LOAD ====================
+// نفصل الصور عن البيانات: البيانات في localStorage، الصور في IndexedDB
+
+async function save() {
+  // نعمل نسخة من الـ state بدون الصور
+  const stateToSave = {
+    ...state,
+    transactions: state.transactions.map(tx => ({ ...tx, image: tx.image ? '__IDB__' : null })),
+    catCustomIcons: Object.fromEntries(
+      Object.entries(state.catCustomIcons || {}).map(([k]) => [k, '__IDB__'])
+    )
+  };
+  localStorage.setItem('mahfazati_v2', JSON.stringify(stateToSave));
+
+  // نحفظ كل صورة في IndexedDB بمفتاح فريد
+  const saves = [];
+  state.transactions.forEach(tx => {
+    if (tx.image) saves.push(idbSet('tx_img_' + tx.id, tx.image));
+  });
+  Object.entries(state.catCustomIcons || {}).forEach(([cat, img]) => {
+    if (img) saves.push(idbSet('cat_icon_' + cat, img));
+  });
+  try { await Promise.all(saves); } catch(e) { console.error('IDB save error', e); }
+
+  if (state.driveConnected) syncDrive();
+}
+
+async function loadFromStorage() {
   const saved = localStorage.getItem('mahfazati_v2');
   if (saved) {
-    try { const d = JSON.parse(saved); Object.assign(state, d); } catch(e) {}
+    try {
+      const d = JSON.parse(saved);
+      Object.assign(state, d);
+    } catch(e) {}
   }
+
+  // نرجع الصور من IndexedDB
+  try {
+    const allImgs = await idbGetAll();
+
+    // صور العمليات
+    state.transactions = state.transactions.map(tx => {
+      if (tx.image === '__IDB__') {
+        return { ...tx, image: allImgs['tx_img_' + tx.id] || null };
+      }
+      return tx;
+    });
+
+    // أيقونات الفئات
+    if (state.catCustomIcons) {
+      const restored = {};
+      for (const [cat, val] of Object.entries(state.catCustomIcons)) {
+        if (val === '__IDB__') {
+          restored[cat] = allImgs['cat_icon_' + cat] || null;
+        } else {
+          restored[cat] = val;
+        }
+      }
+      state.catCustomIcons = restored;
+    }
+  } catch(e) { console.error('IDB load error', e); }
+}
+
+// ==================== INIT ====================
+async function init() {
+  await loadFromStorage();
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('txDate').value = today;
   document.getElementById('trDate').value = today;
-  // Set initial form card color
   setType(state.currentType || 'expense');
   renderAll();
-}
-
-function save() {
-  localStorage.setItem('mahfazati_v2', JSON.stringify(state));
-  if (state.driveConnected) syncDrive();
 }
 
 function renderAll() {
@@ -1046,6 +1171,8 @@ function txHTML(tx, showDel=false) {
 
 function deleteTx(id) {
   if (!confirm('حذف هذه العملية؟')) return;
+  const tx = state.transactions.find(t=>t.id===id);
+  if (tx?.image) idbDelete('tx_img_' + id).catch(()=>{});
   state.transactions = state.transactions.filter(t=>t.id!==id);
   save(); renderAll();
   showToast('تم الحذف');
@@ -1191,7 +1318,10 @@ function addCategory() {
 
 function delCat(c) {
   state.categories = state.categories.filter(x=>x!==c);
-  if (state.catCustomIcons) delete state.catCustomIcons[c];
+  if (state.catCustomIcons) {
+    idbDelete('cat_icon_' + c).catch(()=>{});
+    delete state.catCustomIcons[c];
+  }
   save(); renderAll();
 }
 
@@ -1557,8 +1687,22 @@ function initDriveIfPreviouslyConnected() {
 }
 
 // ==================== EXPORT / IMPORT ====================
-function exportData() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+async function exportData() {
+  // نجيب الـ state مع الصور الحقيقية
+  const allImgs = await idbGetAll().catch(()=>({}));
+  const fullState = {
+    ...state,
+    transactions: state.transactions.map(tx => ({
+      ...tx,
+      image: tx.image || allImgs['tx_img_' + tx.id] || null
+    })),
+    catCustomIcons: Object.fromEntries(
+      Object.entries(state.catCustomIcons || {}).map(([k,v]) => [
+        k, v || allImgs['cat_icon_' + k] || null
+      ])
+    )
+  };
+  const blob = new Blob([JSON.stringify(fullState, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `mahfazati_backup_${new Date().toISOString().split('T')[0]}.json`;
@@ -1567,15 +1711,16 @@ function exportData() {
 
 function importData() { document.getElementById('importInput').click(); }
 
-function handleImport(e) {
+async function handleImport(e) {
   const file = e.target.files[0];
   if (!file) return;
   const r = new FileReader();
-  r.onload = ev => {
+  r.onload = async ev => {
     try {
       const d = JSON.parse(ev.target.result);
       Object.assign(state, d);
-      save(); renderAll();
+      await save();
+      renderAll();
       showToast('تم الاستيراد بنجاح ✓');
     } catch { showToast('ملف غير صالح'); }
   };
@@ -1593,9 +1738,10 @@ function showToast(msg) {
 }
 
 // ==================== START ====================
-init();
-updateDriveUI();
-initDriveIfPreviouslyConnected();
+init().then(() => {
+  updateDriveUI();
+  initDriveIfPreviouslyConnected();
+});
 
 // ==================== HIDE NUMBERS ====================
 let numbersHidden = false;
