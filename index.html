@@ -170,10 +170,33 @@
     .type-btn {
       flex: 1; padding: 10px; border-radius: 10px; border: 2px solid var(--border);
       background: var(--surface2); color: var(--text2); font-family: 'Cairo', sans-serif;
-      font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease;
     }
-    .type-btn.active.expense { border-color: var(--accent2); color: var(--accent2); background: rgba(255,101,132,0.1); }
-    .type-btn.active.income { border-color: var(--accent3); color: var(--accent3); background: rgba(67,233,123,0.1); }
+    .type-btn.active.expense {
+      border-color: #ff6584;
+      color: #ff6584;
+      background: rgba(255, 101, 132, 0.12);
+      box-shadow: 0 0 0 3px rgba(255, 101, 132, 0.15);
+    }
+    .type-btn.active.income {
+      border-color: #43e97b;
+      color: #43e97b;
+      background: rgba(67, 233, 123, 0.12);
+      box-shadow: 0 0 0 3px rgba(67, 233, 123, 0.15);
+    }
+
+    /* ---- ADD FORM CARD TYPE COLOR ---- */
+    #addFormCard {
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    #addFormCard.expense-mode {
+      border-color: rgba(255, 101, 132, 0.45);
+      box-shadow: 0 0 0 1px rgba(255, 101, 132, 0.12), inset 4px 0 0 rgba(255, 101, 132, 0.5);
+    }
+    #addFormCard.income-mode {
+      border-color: rgba(67, 233, 123, 0.45);
+      box-shadow: 0 0 0 1px rgba(67, 233, 123, 0.12), inset 4px 0 0 rgba(67, 233, 123, 0.5);
+    }
 
     /* ---- IMAGE UPLOAD ---- */
     .upload-area {
@@ -356,7 +379,7 @@
     <button class="type-btn income" id="btnIncome" onclick="setType('income')">↑ دخل</button>
   </div>
 
-  <div class="card">
+  <div class="card" id="addFormCard">
     <div class="form-row">
       <div class="form-group">
         <label>المبلغ (جنيه)</label>
@@ -632,6 +655,8 @@ function init() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('txDate').value = today;
   document.getElementById('trDate').value = today;
+  // Set initial form card color
+  setType(state.currentType || 'expense');
   renderAll();
 }
 
@@ -704,6 +729,9 @@ function setType(t) {
   document.getElementById('btnIncome').classList.toggle('active', t==='income');
   document.getElementById('btnExpense').classList.toggle('expense', t==='expense');
   document.getElementById('btnIncome').classList.toggle('income', t==='income');
+  const card = document.getElementById('addFormCard');
+  card.classList.toggle('expense-mode', t==='expense');
+  card.classList.toggle('income-mode', t==='income');
 }
 
 function previewImg(e) {
