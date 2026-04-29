@@ -944,33 +944,51 @@ async function idbClear() {
 }
 
 // ==================== SAVE / LOAD ====================
-// نفصل الصور عن البيانات: البيانات في localStorage، الصور في IndexedDB
+// البيانات النصية (أرصدة، فئات، عمليات بدون صور) → localStorage فوراً وبدون async
+// الصور فقط → IndexedDB بشكل منفصل
 
-async function save() {
-  // نعمل نسخة من الـ state بدون الصور
+function saveTextState() {
+  // نحفظ كل الـ state ماعدا الصور الـ base64 الكبيرة
   const stateToSave = {
     ...state,
-    transactions: state.transactions.map(tx => ({ ...tx, image: tx.image ? '__IDB__' : null })),
+    transactions: state.transactions.map(tx => ({
+      ...tx,
+      image: tx.image ? '__IDB__' : null   // نستبدل الصورة بعلامة فقط
+    })),
     catCustomIcons: Object.fromEntries(
-      Object.entries(state.catCustomIcons || {}).map(([k]) => [k, '__IDB__'])
+      Object.entries(state.catCustomIcons || {}).map(([k, v]) => [k, v ? '__IDB__' : null])
     )
   };
-  localStorage.setItem('mahfazati_v2', JSON.stringify(stateToSave));
+  try {
+    localStorage.setItem('mahfazati_v2', JSON.stringify(stateToSave));
+  } catch(e) {
+    console.error('localStorage save error:', e);
+  }
+}
 
-  // نحفظ كل صورة في IndexedDB بمفتاح فريد
-  const saves = [];
+function saveImagesAsync() {
+  // نحفظ الصور في IDB في الخلفية بدون انتظار
   state.transactions.forEach(tx => {
-    if (tx.image) saves.push(idbSet('tx_img_' + tx.id, tx.image));
+    if (tx.image && tx.image !== '__IDB__') {
+      idbSet('tx_img_' + tx.id, tx.image).catch(e => console.error('IDB img save:', e));
+    }
   });
   Object.entries(state.catCustomIcons || {}).forEach(([cat, img]) => {
-    if (img) saves.push(idbSet('cat_icon_' + cat, img));
+    if (img && img !== '__IDB__') {
+      idbSet('cat_icon_' + cat, img).catch(e => console.error('IDB cat save:', e));
+    }
   });
-  try { await Promise.all(saves); } catch(e) { console.error('IDB save error', e); }
+}
 
+// الدالة الرئيسية للحفظ — synchronous للبيانات، async للصور في الخلفية
+function save() {
+  saveTextState();    // فوري ومضمون
+  saveImagesAsync();  // في الخلفية للصور فقط
   if (state.driveConnected) syncDrive();
 }
 
 async function loadFromStorage() {
+  // 1. نحمل البيانات النصية من localStorage أولاً
   const saved = localStorage.getItem('mahfazati_v2');
   if (saved) {
     try {
@@ -979,27 +997,19 @@ async function loadFromStorage() {
     } catch(e) {}
   }
 
-  // نرجع الصور من IndexedDB
+  // 2. نرجع الصور من IndexedDB
   try {
     const allImgs = await idbGetAll();
 
-    // صور العمليات
-    state.transactions = state.transactions.map(tx => {
-      if (tx.image === '__IDB__') {
-        return { ...tx, image: allImgs['tx_img_' + tx.id] || null };
-      }
-      return tx;
-    });
+    state.transactions = state.transactions.map(tx => ({
+      ...tx,
+      image: tx.image === '__IDB__' ? (allImgs['tx_img_' + tx.id] || null) : tx.image
+    }));
 
-    // أيقونات الفئات
     if (state.catCustomIcons) {
       const restored = {};
       for (const [cat, val] of Object.entries(state.catCustomIcons)) {
-        if (val === '__IDB__') {
-          restored[cat] = allImgs['cat_icon_' + cat] || null;
-        } else {
-          restored[cat] = val;
-        }
+        restored[cat] = val === '__IDB__' ? (allImgs['cat_icon_' + cat] || null) : val;
       }
       state.catCustomIcons = restored;
     }
@@ -1719,7 +1729,18 @@ async function handleImport(e) {
     try {
       const d = JSON.parse(ev.target.result);
       Object.assign(state, d);
-      await save();
+      // لو الصور موجودة في الملف، نحفظها في IDB
+      state.transactions.forEach(tx => {
+        if (tx.image && tx.image !== '__IDB__') {
+          idbSet('tx_img_' + tx.id, tx.image).catch(()=>{});
+        }
+      });
+      Object.entries(state.catCustomIcons || {}).forEach(([cat, img]) => {
+        if (img && img !== '__IDB__') {
+          idbSet('cat_icon_' + cat, img).catch(()=>{});
+        }
+      });
+      save();
       renderAll();
       showToast('تم الاستيراد بنجاح ✓');
     } catch { showToast('ملف غير صالح'); }
