@@ -404,8 +404,8 @@
   <div class="tab" onclick="showPage('transfer')"><i class="fas fa-exchange-alt"></i>تحويل</div>
   <div class="tab" onclick="showPage('history')"><i class="fas fa-list"></i>السجل</div>
   <div class="tab" onclick="showPage('stats')"><i class="fas fa-chart-pie"></i>إحصائيات</div>
-  <div class="tab" onclick="showPage('settings')"><i class="fas fa-cog"></i>الإعدادات</div>
   <div class="tab" onclick="showPage('installments')"><i class="fas fa-credit-card"></i>تقسيط</div>
+  <div class="tab" onclick="showPage('settings')"><i class="fas fa-cog"></i>الإعدادات</div>
 </div>
 
 <!-- ===================== HOME ===================== -->
@@ -651,6 +651,29 @@
     <div id="walletBalanceForm"></div>
   </div>
 
+  <!-- Bank Fee Reminders -->
+  <div class="card">
+    <div class="card-title">🏦 تذكير مصاريف البنوك (إنستاباي)</div>
+    <p style="font-size:0.82rem;color:var(--text2);margin-bottom:14px;">حدد مبلغ الخصم الشهري لكل بنك — لو حطيت صفر مش هيذكرك بالبنك ده.</p>
+
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;"><span>🏦</span> بنك القاهرة (إنستاباي) — جنيه/شهر</label>
+      <input type="number" id="feeSettingCairo" placeholder="0" inputmode="decimal" min="0" step="0.5"/>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;"><span>🏦</span> البنك الأهلي (إنستاباي) — جنيه/شهر</label>
+      <input type="number" id="feeSettingAhly" placeholder="0" inputmode="decimal" min="0" step="0.5"/>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;"><span>🏦</span> بنك مصر (إنستاباي) — جنيه/شهر</label>
+      <input type="number" id="feeSettingMasr" placeholder="0" inputmode="decimal" min="0" step="0.5"/>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="saveBankFeeSettings()">
+      <i class="fas fa-save"></i> حفظ إعدادات التذكير
+    </button>
+  </div>
+
   <div class="card">
     <div class="card-title">Google Drive</div>
     <p style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;">احفظ بياناتك على Google Drive لضمان عدم ضياعها.</p>
@@ -772,11 +795,33 @@
 <!-- CAIRO INSTAPAY REMINDER -->
 <div class="cairo-reminder" id="cairoReminder">
   <div>🏦 تذكير: انستاباي بنك القاهرة</div>
-  <div style="font-size:0.78rem;color:#93c5fd;margin-top:4px;">بيخصم 5 جنيه تلقائياً هذا الشهر</div>
+  <div style="font-size:0.78rem;color:#93c5fd;margin-top:4px;" id="cairoReminderAmt">بيخصم 5 جنيه تلقائياً هذا الشهر</div>
   <div class="cr-btns">
-    <button class="cr-btn" style="background:var(--accent3);color:#000;" onclick="confirmCairoFee(true)">✅ تأكيد الـ 5 ج</button>
-    <button class="cr-btn" style="background:var(--accent2);color:#fff;" onclick="confirmCairoFee(false)">❌ اتخصم أكتر</button>
-    <button class="cr-btn" style="background:var(--surface2);color:var(--text);" onclick="dismissCairoReminder()">لاحقاً</button>
+    <button class="cr-btn" style="background:var(--accent3);color:#000;" onclick="confirmBankFee('cairo')">✅ تأكيد</button>
+    <button class="cr-btn" style="background:var(--accent2);color:#fff;" onclick="confirmBankFeeWrong('cairo')">❌ اتخصم أكتر</button>
+    <button class="cr-btn" style="background:var(--surface2);color:var(--text);" onclick="dismissBankReminder('cairo')">لاحقاً</button>
+  </div>
+</div>
+
+<!-- AHLY INSTAPAY REMINDER -->
+<div class="cairo-reminder" id="ahlyReminder" style="border-color:#6c63ff;">
+  <div>🏦 تذكير: انستاباي البنك الأهلي</div>
+  <div style="font-size:0.78rem;color:#c4b5fd;margin-top:4px;" id="ahlyReminderAmt"></div>
+  <div class="cr-btns">
+    <button class="cr-btn" style="background:var(--accent3);color:#000;" onclick="confirmBankFee('ahly')">✅ تأكيد</button>
+    <button class="cr-btn" style="background:var(--accent2);color:#fff;" onclick="confirmBankFeeWrong('ahly')">❌ اتخصم أكتر</button>
+    <button class="cr-btn" style="background:var(--surface2);color:var(--text);" onclick="dismissBankReminder('ahly')">لاحقاً</button>
+  </div>
+</div>
+
+<!-- MASR INSTAPAY REMINDER -->
+<div class="cairo-reminder" id="masrReminder" style="border-color:#ff6584;">
+  <div>🏦 تذكير: انستاباي بنك مصر</div>
+  <div style="font-size:0.78rem;color:#fca5a5;margin-top:4px;" id="masrReminderAmt"></div>
+  <div class="cr-btns">
+    <button class="cr-btn" style="background:var(--accent3);color:#000;" onclick="confirmBankFee('masrInstapay')">✅ تأكيد</button>
+    <button class="cr-btn" style="background:var(--accent2);color:#fff;" onclick="confirmBankFeeWrong('masrInstapay')">❌ اتخصم أكتر</button>
+    <button class="cr-btn" style="background:var(--surface2);color:var(--text);" onclick="dismissBankReminder('masrInstapay')">لاحقاً</button>
   </div>
 </div>
 
@@ -1117,12 +1162,13 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const idx = ['home','add','transfer','history','stats','settings','installments'].indexOf(name);
+  const idx = ['home','add','transfer','history','stats','installments','settings'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   if (name==='stats') renderStats();
   if (name==='history') renderHistory();
   if (name==='transfer') { updateTransferUI(); renderTransferList(); }
   if (name==='installments') renderInstallments();
+  if (name==='settings') loadBankFeeSettingsUI();
 }
 
 // ==================== TRANSFERS ====================
@@ -1524,57 +1570,118 @@ function toggleTheme() {
   }
 })();
 
-// ==================== CAIRO INSTAPAY REMINDER ====================
-function checkCairoReminder() {
-  const now = new Date();
-  const lastCheck = localStorage.getItem('cairo_last_check');
-  const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
-  if (lastCheck === monthKey) return;
-  // ظهر التذكير في أول يوم أو بعد أول مرة فتح في الشهر
-  setTimeout(() => {
-    document.getElementById('cairoReminder').classList.add('show');
-  }, 2000);
+// ==================== BANK FEE REMINDERS (3 BANKS) ====================
+
+const BANK_FEE_CONFIG = {
+  cairo:        { reminderEl: 'cairoReminder', amtEl: 'cairoReminderAmt', walletKey: 'cairo',        settingKey: 'feeCairo',  defaultFee: 5,   name: 'بنك القاهرة', category: 'فواتير', note: 'رسوم انستاباي بنك القاهرة - شهري' },
+  ahly:         { reminderEl: 'ahlyReminder',  amtEl: 'ahlyReminderAmt',  walletKey: 'ahly',         settingKey: 'feeAhly',   defaultFee: 0,   name: 'البنك الأهلي', category: 'فواتير', note: 'رسوم انستاباي البنك الأهلي - شهري' },
+  masrInstapay: { reminderEl: 'masrReminder',  amtEl: 'masrReminderAmt',  walletKey: 'masrInstapay', settingKey: 'feeMasr',   defaultFee: 0,   name: 'بنك مصر',     category: 'فواتير', note: 'رسوم انستاباي بنك مصر - شهري' },
+};
+
+function getBankFee(settingKey, defaultFee) {
+  const stored = localStorage.getItem('mahfazati_' + settingKey);
+  return stored !== null ? parseFloat(stored) : defaultFee;
 }
 
-function confirmCairoFee(isCorrect) {
+function saveBankFeeSettings() {
+  const cairoFee = parseFloat(document.getElementById('feeSettingCairo').value) || 0;
+  const ahlyFee  = parseFloat(document.getElementById('feeSettingAhly').value)  || 0;
+  const masrFee  = parseFloat(document.getElementById('feeSettingMasr').value)  || 0;
+  localStorage.setItem('mahfazati_feeCairo', cairoFee);
+  localStorage.setItem('mahfazati_feeAhly',  ahlyFee);
+  localStorage.setItem('mahfazati_feeMasr',  masrFee);
+  showToast('✅ تم حفظ إعدادات تذكير البنوك');
+}
+
+function loadBankFeeSettingsUI() {
+  const cairoEl = document.getElementById('feeSettingCairo');
+  const ahlyEl  = document.getElementById('feeSettingAhly');
+  const masrEl  = document.getElementById('feeSettingMasr');
+  if (cairoEl) cairoEl.value = getBankFee('feeCairo', 5);
+  if (ahlyEl)  ahlyEl.value  = getBankFee('feeAhly',  0);
+  if (masrEl)  masrEl.value  = getBankFee('feeMasr',  0);
+}
+
+function checkBankReminders() {
   const now = new Date();
   const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
-  localStorage.setItem('cairo_last_check', monthKey);
-  document.getElementById('cairoReminder').classList.remove('show');
+  let delay = 2000;
 
-  if (isCorrect) {
-    // تسجيل الـ 5 جنيه تلقائياً
-    const today = now.toISOString().split('T')[0];
-    state.transactions.push({
-      id: Date.now().toString(),
-      type: 'expense',
-      amount: 5,
-      date: today,
-      wallet: 'cairo',
-      category: 'فواتير',
-      note: 'رسوم انستاباي بنك القاهرة - شهري',
-      image: null,
-      createdAt: new Date().toISOString()
-    });
-    save(); renderAll();
-    showToast('✅ تم تسجيل رسوم انستاباي القاهرة (5 ج)');
-  } else {
-    showToast('⚠️ راجع كشف الحساب وسجل المبلغ يدوياً');
-    // فتح صفحة الإضافة مع اختيار محفظة القاهرة
+  Object.entries(BANK_FEE_CONFIG).forEach(([bankId, cfg]) => {
+    const fee = getBankFee(cfg.settingKey, cfg.defaultFee);
+    if (fee <= 0) return; // لو صفر مش بيذكر
+
+    const lastCheck = localStorage.getItem('mahfazati_bank_check_' + bankId);
+    if (lastCheck === monthKey) return;
+
+    // ظهر التذكير بتأخير تدريجي علشان ما يتراكموش
     setTimeout(() => {
-      showPage('add');
-      document.getElementById('txWallet').value = 'cairo';
-      setType('expense');
-    }, 1000);
-  }
+      const amtEl = document.getElementById(cfg.amtEl);
+      if (amtEl) amtEl.textContent = `بيخصم ${fee} جنيه تلقائياً هذا الشهر`;
+      const el = document.getElementById(cfg.reminderEl);
+      if (el) el.classList.add('show');
+    }, delay);
+    delay += 4000;
+  });
 }
 
-function dismissCairoReminder() {
-  document.getElementById('cairoReminder').classList.remove('show');
+function confirmBankFee(bankId) {
+  const cfg = BANK_FEE_CONFIG[bankId];
+  if (!cfg) return;
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+  localStorage.setItem('mahfazati_bank_check_' + bankId, monthKey);
+  document.getElementById(cfg.reminderEl).classList.remove('show');
+
+  const fee = getBankFee(cfg.settingKey, cfg.defaultFee);
+  const today = now.toISOString().split('T')[0];
+  state.transactions.push({
+    id: Date.now().toString(),
+    type: 'expense',
+    amount: fee,
+    date: today,
+    wallet: cfg.walletKey,
+    category: cfg.category,
+    note: cfg.note,
+    image: null,
+    createdAt: new Date().toISOString()
+  });
+  save(); renderAll();
+  showToast(`✅ تم تسجيل رسوم ${cfg.name} (${fee} ج)`);
 }
 
-// تشغيل تذكير القاهرة
-checkCairoReminder();
+function confirmBankFeeWrong(bankId) {
+  const cfg = BANK_FEE_CONFIG[bankId];
+  if (!cfg) return;
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+  localStorage.setItem('mahfazati_bank_check_' + bankId, monthKey);
+  document.getElementById(cfg.reminderEl).classList.remove('show');
+  showToast('⚠️ راجع كشف الحساب وسجل المبلغ يدوياً');
+  setTimeout(() => {
+    showPage('add');
+    document.getElementById('txWallet').value = cfg.walletKey;
+    setType('expense');
+  }, 1000);
+}
+
+function dismissBankReminder(bankId) {
+  const cfg = BANK_FEE_CONFIG[bankId];
+  if (!cfg) return;
+  document.getElementById(cfg.reminderEl).classList.remove('show');
+}
+
+// دوال قديمة للتوافق (في حالة مُستخدمة في مكان تاني)
+function checkCairoReminder() { checkBankReminders(); }
+function confirmCairoFee(isCorrect) {
+  if (isCorrect) confirmBankFee('cairo');
+  else confirmBankFeeWrong('cairo');
+}
+function dismissCairoReminder() { dismissBankReminder('cairo'); }
+
+// تشغيل التذكيرات
+checkBankReminders();
+loadBankFeeSettingsUI();
 
 // ==================== WALLET CLICK → HISTORY =====================
 function openWalletHistory(walletKey) {
