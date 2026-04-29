@@ -1085,7 +1085,6 @@ function deleteTransfer(transferId) {
 }
 
 // ==================== GOOGLE DRIVE ====================
-// Replace with your actual Client ID from Google Cloud Console
 const CLIENT_ID = '813333077586-79tfs08h2olmjnbgmj6oj3a6srhe25br.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'mahfazati_data.json';
@@ -1093,6 +1092,8 @@ const FILE_NAME = 'mahfazati_data.json';
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
+let autoSyncInterval = null;
+let isSyncing = false;
 
 function gapiLoaded() {
   gapi.load('client', initGapiClient);
@@ -1110,17 +1111,32 @@ function gisLoaded() {
     scope: SCOPES,
     callback: async (resp) => {
       if (resp.error) { showToast('فشل تسجيل الدخول'); return; }
+      // حفظ وقت انتهاء الـ token
+      const expiresAt = Date.now() + (resp.expires_in * 1000);
+      localStorage.setItem('mahfazati_token_expiry', expiresAt);
       state.driveConnected = true;
       updateDriveUI();
       await loadFromDrive();
       save();
+      startAutoSync();
     }
   });
   gisInited = true;
   maybeEnableDrive();
 }
 
-function maybeEnableDrive() {}
+function maybeEnableDrive() {
+  if (gapiInited && gisInited && state.driveConnected) {
+    // لو الاتنين جاهزين والمستخدم كان متصل قبل كده، نجدد الـ token تلقائياً
+    silentTokenRefresh();
+  }
+}
+
+// تجديد الـ token بدون popup لو المستخدم كان متصل قبل كده
+function silentTokenRefresh() {
+  if (!tokenClient) return;
+  tokenClient.requestAccessToken({ prompt: '' }); // prompt فاضي = silent
+}
 
 function toggleDrive() {
   if (!gapiInited || !gisInited) {
@@ -1133,6 +1149,8 @@ function toggleDrive() {
     gapi.client.setToken(null);
     state.driveConnected = false;
     state.driveFileId = null;
+    localStorage.removeItem('mahfazati_token_expiry');
+    stopAutoSync();
     save();
     updateDriveUI();
     showToast('تم قطع الاتصال بـ Drive');
@@ -1158,9 +1176,54 @@ function loadGoogleAPIs() {
   }
 }
 
-async function syncDrive() {
-  if (!state.driveConnected || !gapiInited) return;
+// ---- Auto-sync كل دقيقة ----
+function startAutoSync() {
+  stopAutoSync();
+  // pull من Drive كل 60 ثانية لو التطبيق مفتوح في أكتر من مكان
+  autoSyncInterval = setInterval(async () => {
+    if (state.driveConnected && gapiInited && !isSyncing) {
+      await pullFromDrive();
+    }
+  }, 60000);
+}
+
+function stopAutoSync() {
+  if (autoSyncInterval) { clearInterval(autoSyncInterval); autoSyncInterval = null; }
+}
+
+// Pull الداتا من Drive وقارنها بالـ local — لو في حاجة جديدة خد منها
+async function pullFromDrive() {
+  if (isSyncing) return;
+  isSyncing = true;
   try {
+    const res = await gapi.client.drive.files.list({
+      q: `name='${FILE_NAME}' and trashed=false`,
+      fields: 'files(id,name,modifiedTime)',
+      pageSize: 1
+    });
+    const files = res.result.files;
+    if (files && files.length > 0) {
+      const remoteModified = new Date(files[0].modifiedTime).getTime();
+      const localModified = state.lastSaved || 0;
+      // لو Drive أحدث من الـ local، اجيب منه
+      if (remoteModified > localModified) {
+        state.driveFileId = files[0].id;
+        const content = await gapi.client.drive.files.get({ fileId: state.driveFileId, alt: 'media' });
+        const remote = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
+        Object.assign(state, remote);
+        renderAll();
+        showToast('🔄 تم تحديث البيانات من Drive');
+      }
+    }
+  } catch(e) { console.warn('Drive pull error', e); }
+  finally { isSyncing = false; }
+}
+
+async function syncDrive() {
+  if (!state.driveConnected || !gapiInited || isSyncing) return;
+  isSyncing = true;
+  try {
+    state.lastSaved = Date.now(); // timestamp للمقارنة عند الـ pull
     const data = JSON.stringify(state);
     if (state.driveFileId) {
       await gapi.client.request({
@@ -1181,6 +1244,7 @@ async function syncDrive() {
       localStorage.setItem('mahfazati_v2', JSON.stringify(state));
     }
   } catch(e) { console.warn('Drive sync error', e); }
+  finally { isSyncing = false; }
 }
 
 async function loadFromDrive() {
@@ -1212,6 +1276,13 @@ function updateDriveUI() {
     btn.classList.remove('connected');
     txt.textContent = 'ربط Drive';
     if(stxt) stxt.textContent = 'ربط Google Drive';
+  }
+}
+
+// تحميل الـ APIs تلقائياً عند فتح التطبيق لو كان متصل قبل كده
+function initDriveIfPreviouslyConnected() {
+  if (state.driveConnected) {
+    loadGoogleAPIs();
   }
 }
 
@@ -1254,6 +1325,7 @@ function showToast(msg) {
 // ==================== START ====================
 init();
 updateDriveUI();
+initDriveIfPreviouslyConnected();
 </script>
 </body>
 </html>
