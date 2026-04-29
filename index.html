@@ -686,7 +686,7 @@ function renderWallets() {
     div.innerHTML = `
       <div class="wicon">${w.icon}</div>
       <div class="wname">${w.name}</div>
-      <div class="wamt" style="color:${w.color}">${fmt(bal)}</div>
+      <div class="wamt" style="color:${bal > 0 ? '#43e97b' : bal < 0 ? '#ff6584' : '#f7971e'}">${fmt(bal)}</div>
     `;
     grid.appendChild(div);
   });
