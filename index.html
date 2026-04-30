@@ -355,50 +355,6 @@
       font-family: 'Cairo', sans-serif; font-size: 0.8rem; font-weight: 700;
     }
 
-    /* ---- PIN LOCK ---- */
-    #pinLockScreen {
-      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 20px;
-    }
-    #pinLockScreen .pin-logo { font-size: 2rem; font-weight: 900; color: var(--accent); }
-    #pinLockScreen .pin-dots { display: flex; gap: 16px; }
-    #pinLockScreen .pin-dot {
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 2px solid var(--border); background: transparent; transition: all 0.2s;
-    }
-    #pinLockScreen .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
-    #pinLockScreen .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    #pinLockScreen .pin-key {
-      width: 72px; height: 72px; border-radius: 50%; border: 1px solid var(--border);
-      background: var(--surface); color: var(--text); font-family: 'Cairo', sans-serif;
-      font-size: 1.4rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
-      display: flex; align-items: center; justify-content: center;
-    }
-    #pinLockScreen .pin-key:active { background: var(--accent); color: #fff; transform: scale(0.92); }
-    #pinLockScreen .pin-key.del { font-size: 1rem; }
-    #pinLockScreen .pin-key.empty { background: transparent; border: none; cursor: default; }
-    #pinLockScreen .pin-error { color: var(--accent2); font-size: 0.85rem; min-height: 20px; }
-    #pinLockScreen .pin-title { font-size: 1rem; color: var(--text2); font-weight: 600; }
-
-    /* ---- BUDGET ---- */
-    .budget-bar-wrap { margin-bottom: 12px; }
-    .budget-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .budget-bar-track { width: 100%; background: var(--surface2); border-radius: 8px; height: 12px; overflow: hidden; }
-    .budget-bar-fill { height: 100%; border-radius: 8px; transition: width 0.5s; }
-    .budget-warn { background: var(--accent2) !important; }
-    .budget-near { background: var(--accent4) !important; }
-    .budget-ok { background: var(--accent3) !important; }
-
-    /* ---- GOALS ---- */
-    .goal-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
-    .goal-progress-wrap { margin-top: 10px; }
-    .goal-bar-track { width: 100%; background: var(--bg); border-radius: 8px; height: 10px; overflow: hidden; }
-    .goal-bar-fill { height: 100%; border-radius: 8px; background: var(--accent); transition: width 0.5s; }
-
-    /* ---- SPIN ---- */
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
     /* ---- NUMBERS HIDDEN ---- */
     body.numbers-hidden .wamt,
     body.numbers-hidden #homeIncome,
@@ -424,33 +380,6 @@
 </head>
 <body>
 
-<!-- PIN LOCK SCREEN -->
-<div id="pinLockScreen" style="display:none;">
-  <div class="pin-logo">محفظتي 🔒</div>
-  <div class="pin-title" id="pinTitle">أدخل رمز PIN</div>
-  <div class="pin-dots" id="pinDots">
-    <div class="pin-dot" id="d0"></div>
-    <div class="pin-dot" id="d1"></div>
-    <div class="pin-dot" id="d2"></div>
-    <div class="pin-dot" id="d3"></div>
-  </div>
-  <div class="pin-error" id="pinError"></div>
-  <div class="pin-pad">
-    <button class="pin-key" onclick="pinPress('1')">1</button>
-    <button class="pin-key" onclick="pinPress('2')">2</button>
-    <button class="pin-key" onclick="pinPress('3')">3</button>
-    <button class="pin-key" onclick="pinPress('4')">4</button>
-    <button class="pin-key" onclick="pinPress('5')">5</button>
-    <button class="pin-key" onclick="pinPress('6')">6</button>
-    <button class="pin-key" onclick="pinPress('7')">7</button>
-    <button class="pin-key" onclick="pinPress('8')">8</button>
-    <button class="pin-key" onclick="pinPress('9')">9</button>
-    <button class="pin-key empty"></button>
-    <button class="pin-key" onclick="pinPress('0')">0</button>
-    <button class="pin-key del" onclick="pinDel()"><i class="fas fa-delete-left"></i></button>
-  </div>
-</div>
-
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="logo">محفظتي <span>💰</span></div>
@@ -465,9 +394,6 @@
       <i class="fab fa-google-drive"></i>
       <span id="gdriveTxt">ربط Drive</span>
     </button>
-    <button class="gdrive-btn" id="syncBtn" onclick="manualSync()" title="مزامنة / Backup الآن">
-      <i class="fas fa-rotate" id="syncIcon"></i>
-    </button>
   </div>
 </div>
 
@@ -478,8 +404,6 @@
   <div class="tab" onclick="showPage('transfer')"><i class="fas fa-exchange-alt"></i>تحويل</div>
   <div class="tab" onclick="showPage('history')"><i class="fas fa-list"></i>السجل</div>
   <div class="tab" onclick="showPage('stats')"><i class="fas fa-chart-pie"></i>إحصائيات</div>
-  <div class="tab" onclick="showPage('budget')"><i class="fas fa-wallet"></i>الميزانية</div>
-  <div class="tab" onclick="showPage('goals')"><i class="fas fa-bullseye"></i>أهدافي</div>
   <div class="tab" onclick="showPage('installments')"><i class="fas fa-credit-card"></i>تقسيط</div>
   <div class="tab" onclick="showPage('settings')"><i class="fas fa-cog"></i>الإعدادات</div>
 </div>
@@ -718,27 +642,6 @@
 <!-- ===================== SETTINGS ===================== -->
 <div class="page" id="page-settings">
   <div class="card">
-    <div class="card-title">🔒 قفل PIN</div>
-    <p style="font-size:0.82rem;color:var(--text2);margin-bottom:14px;">اضبط رمز PIN من 4 أرقام لحماية التطبيق عند الفتح.</p>
-    <div id="pinSettingArea">
-      <div id="pinCurrentStatus" style="font-size:0.85rem;margin-bottom:12px;"></div>
-      <div class="form-row">
-        <div class="form-group">
-          <label id="pinNewLabel">رمز PIN جديد (4 أرقام)</label>
-          <input type="password" id="pinNewInput" maxlength="4" inputmode="numeric" placeholder="****" style="letter-spacing:6px;text-align:center;font-size:1.3rem;"/>
-        </div>
-        <div class="form-group">
-          <label>تأكيد PIN</label>
-          <input type="password" id="pinConfirmInput" maxlength="4" inputmode="numeric" placeholder="****" style="letter-spacing:6px;text-align:center;font-size:1.3rem;"/>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary" style="flex:1" onclick="savePinSetting()"><i class="fas fa-lock"></i> حفظ PIN</button>
-        <button class="btn btn-danger btn-sm" onclick="removePinSetting()" id="removePinBtn" style="display:none;"><i class="fas fa-lock-open"></i> إزالة</button>
-      </div>
-    </div>
-  </div>
-  <div class="card">
     <div class="card-title">الفئات</div>
     <div class="cat-list" id="catList"></div>
     <div style="display:flex;gap:8px;align-items:center;">
@@ -748,11 +651,10 @@
         <img id="catIconImgPreview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;"/>
       </div>
       <input type="file" id="catIconInput" accept="image/*" style="display:none" onchange="previewCatIcon(event)"/>
-      <input type="text" id="catIconEmojiInput" placeholder="إيموجي أو نص (مثال: 🍕)" style="width:100px;flex-shrink:0;text-align:center;font-size:1.2rem;" oninput="updateEmojiFromText(this.value)"/>
       <input type="text" id="newCatInput" placeholder="اسم الفئة الجديدة" style="flex:1"/>
       <button class="btn btn-primary btn-sm" onclick="addCategory()">+ إضافة</button>
     </div>
-    <div style="font-size:0.75rem;color:var(--text2);margin-top:6px;">اضغط المربع لرفع صورة · أو اكتب إيموجي في الخانة الجانبية</div>
+    <div style="font-size:0.75rem;color:var(--text2);margin-top:6px;">اضغط على المربع لرفع أيقونة مخصصة (اختياري)</div>
   </div>
 
   <div class="card">
@@ -790,19 +692,6 @@
       <i class="fab fa-google-drive"></i>
       <span id="driveSettingTxt">ربط Google Drive</span>
     </button>
-    <!-- رفع وتنزيل Drive -->
-    <div style="margin-top:10px;display:flex;gap:8px;">
-      <button class="btn btn-sm btn-full" style="background:var(--accent);color:#fff;flex:1" onclick="manualSync()">
-        <i class="fas fa-cloud-arrow-up"></i> رفع بياناتي ↑
-      </button>
-      <button class="btn btn-sm btn-full" style="background:var(--surface2);color:var(--text);flex:1" onclick="pullFromDriveManual()">
-        <i class="fas fa-cloud-arrow-down"></i> تحميل من Drive ↓
-      </button>
-    </div>
-    <p style="font-size:0.75rem;color:var(--text2);margin-top:8px;line-height:1.6;">
-      ↑ <b>رفع</b>: بياناتك الحالية تستبدل اللي على Drive<br/>
-      ↓ <b>تحميل</b>: Drive يستبدل بياناتك الحالية
-    </p>
     <div style="margin-top:10px;display:flex;gap:8px;">
       <button class="btn btn-sm" style="background:var(--surface2);color:var(--text);flex:1" onclick="exportData()">
         <i class="fas fa-download"></i> تصدير JSON
@@ -812,103 +701,6 @@
       </button>
     </div>
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="handleImport(event)"/>
-  </div>
-</div>
-
-<!-- ===================== BUDGET PLANNING ===================== -->
-<div class="page" id="page-budget">
-  <div class="card" style="border-color:rgba(255,123,46,0.4);">
-    <div class="card-title" style="margin-bottom:14px;">💰 إضافة ميزانية لفئة</div>
-    <div class="form-group">
-      <label>الفئة</label>
-      <select id="budgetCat"></select>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>الحد الشهري (جنيه)</label>
-        <input type="number" id="budgetAmount" placeholder="0.00" inputmode="decimal"/>
-      </div>
-      <div class="form-group">
-        <label>تحذير عند % من الميزانية</label>
-        <input type="number" id="budgetWarnPct" placeholder="80" inputmode="numeric" value="80" min="1" max="99"/>
-      </div>
-    </div>
-    <button class="btn btn-primary btn-full" onclick="saveBudget()">
-      <i class="fas fa-check"></i> حفظ الميزانية
-    </button>
-  </div>
-
-  <div class="card">
-    <div class="card-title">📊 الميزانيات الشهرية</div>
-    <div id="budgetList"><div class="empty"><i class="fas fa-wallet"></i>لا توجد ميزانيات بعد</div></div>
-  </div>
-</div>
-
-<!-- ===================== GOALS / SAVING TRACKER ===================== -->
-<div class="page" id="page-goals">
-  <div class="card" style="border-color:rgba(67,233,123,0.4);">
-    <div class="card-title" style="margin-bottom:14px;">🎯 إضافة هدف ادخار</div>
-    <div class="form-group">
-      <label>اسم الهدف</label>
-      <input type="text" id="goalName" placeholder="مثال: سفر، عربية، لابتوب..."/>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>المبلغ المستهدف (جنيه)</label>
-        <input type="number" id="goalTarget" placeholder="50000" inputmode="decimal" oninput="calcGoal()"/>
-      </div>
-      <div class="form-group">
-        <label>المبلغ المدخر حتى الآن</label>
-        <input type="number" id="goalSaved" placeholder="0" inputmode="decimal" oninput="calcGoal()"/>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>الموعد النهائي</label>
-        <input type="date" id="goalDeadline" oninput="calcGoal()"/>
-      </div>
-      <div class="form-group">
-        <label>المحفظة المخصصة</label>
-        <select id="goalWallet">
-          <option value="saving">🐷 مدخرات</option>
-          <option value="cairo">🏦 بنك القاهرة</option>
-          <option value="ahly">🏦 الأهلي</option>
-          <option value="masrInstapay">🏦 بنك مصر</option>
-          <option value="cash">💵 كاش</option>
-          <option value="cashInstapay">💵 كاش إنستاباي</option>
-          <option value="vodafone">📱 فودافون كاش</option>
-        </select>
-      </div>
-    </div>
-    <!-- مؤشر الحساب -->
-    <div id="goalCalcBox" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center;">
-        <div>
-          <div style="font-size:0.72rem;color:var(--text2);margin-bottom:4px;">المطلوب يومياً</div>
-          <div style="font-size:1.1rem;font-weight:800;color:var(--accent);" id="goalDaily">0 ج</div>
-        </div>
-        <div>
-          <div style="font-size:0.72rem;color:var(--text2);margin-bottom:4px;">المطلوب شهرياً</div>
-          <div style="font-size:1.1rem;font-weight:800;color:var(--accent3);" id="goalMonthly">0 ج</div>
-        </div>
-        <div>
-          <div style="font-size:0.72rem;color:var(--text2);margin-bottom:4px;">الأيام المتبقية</div>
-          <div style="font-size:1.1rem;font-weight:800;color:var(--accent4);" id="goalDays">0 يوم</div>
-        </div>
-        <div>
-          <div style="font-size:0.72rem;color:var(--text2);margin-bottom:4px;">المبلغ المتبقي</div>
-          <div style="font-size:1.1rem;font-weight:800;color:var(--accent2);" id="goalRemaining">0 ج</div>
-        </div>
-      </div>
-    </div>
-    <button class="btn btn-success btn-full" onclick="saveGoal()">
-      <i class="fas fa-bullseye"></i> حفظ الهدف
-    </button>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🏆 أهدافي</div>
-    <div id="goalsList"><div class="empty"><i class="fas fa-bullseye"></i>لا توجد أهداف بعد</div></div>
   </div>
 </div>
 
@@ -1075,12 +867,9 @@ let state = {
   balances: { cash: 0, cashInstapay: 0, ahly: 0, cairo: 0, masrInstapay: 0, vodafone: 0, saving: 0 },
   categories: ['فطار','غداء','عشاء','سوبر ماركت','مواصلات','فواتير','ترفيه','ملابس','صحة','تعليم','مدخرات','دخل','أخرى'],
   catCustomIcons: {}, // صور مخصصة للفئات { 'اسم الفئة': 'base64...' }
-  catEmojiIcons: {}, // إيموجي نصي للفئات
   statPeriod: 'month',
   driveConnected: false,
   driveFileId: null,
-  budgets: {}, // { catName: { amount: 500, warnPct: 80 } }
-  goals: [],   // [{ id, name, target, saved, deadline, wallet, createdAt }]
 };
 
 // ==================== INDEXEDDB (للصور) ====================
@@ -1235,7 +1024,6 @@ async function init() {
   document.getElementById('trDate').value = today;
   setType(state.currentType || 'expense');
   renderAll();
-  initPinLock();
 }
 
 function renderAll() {
@@ -1247,8 +1035,6 @@ function renderAll() {
   renderBalanceForm();
   populateCategorySelects();
   renderInstallments();
-  renderBudgets();
-  renderGoals();
 }
 
 // ==================== WALLETS ====================
@@ -1342,7 +1128,6 @@ function saveTransaction() {
   state.transactions.push(tx);
   save();
   renderAll();
-  checkBudgetNotifications();
   showToast('تم حفظ العملية ✓');
 
   // reset
@@ -1373,13 +1158,9 @@ function renderHistory() {
 function txHTML(tx, showDel=false) {
   const w = WALLETS[tx.wallet] || { name: tx.wallet, icon: '💳' };
   const customImg = state.catCustomIcons && state.catCustomIcons[tx.category];
-  let catIcon;
-  if (customImg) {
-    catIcon = `<img src="${customImg}" style="width:22px;height:22px;border-radius:5px;object-fit:cover;"/>`;
-  } else {
-    const emojiText = state.catEmojiIcons && state.catEmojiIcons[tx.category];
-    catIcon = emojiText || CAT_ICONS[tx.category] || '📌';
-  }
+  const catIcon = customImg
+    ? `<img src="${customImg}" style="width:22px;height:22px;border-radius:5px;object-fit:cover;"/>`
+    : (CAT_ICONS[tx.category] || '📌');
   const dateStr = new Date(tx.date).toLocaleDateString('ar-EG');
   const imgBtn = tx.image ? `<button class="btn btn-sm" style="background:var(--surface2);color:var(--text)" onclick="viewImg('${tx.id}')"><i class="fas fa-image"></i></button>` : '';
   const delBtn = showDel ? `<button class="btn btn-sm btn-danger" onclick="deleteTx('${tx.id}')"><i class="fas fa-trash"></i></button>` : '';
@@ -1485,16 +1266,13 @@ function renderStats() {
 // ==================== CATEGORIES ====================
 function getCatDisplay(c) {
   const customImg = state.catCustomIcons && state.catCustomIcons[c];
-  if (customImg) return `<img src="${customImg}" style="width:16px;height:16px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-left:3px;"/>`;
-  const emojiText = state.catEmojiIcons && state.catEmojiIcons[c];
-  if (emojiText) return emojiText;
-  return CAT_ICONS[c] || '📌';
+  return customImg ? `<img src="${customImg}" style="width:16px;height:16px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-left:3px;"/>` : (CAT_ICONS[c] || '📌');
 }
 
 function populateCategorySelects() {
   const sel = document.getElementById('txCategory');
   const fc = document.getElementById('filterCat');
-  const opts = state.categories.map(c=>`<option value="${c}">${getCatDisplay(c)} ${c}</option>`).join('');
+  const opts = state.categories.map(c=>`<option value="${c}">${CAT_ICONS[c]||'📌'} ${c}</option>`).join('');
   sel.innerHTML = opts;
   fc.innerHTML = '<option value="">كل الفئات</option>' + opts;
 }
@@ -1503,13 +1281,9 @@ function renderCategories() {
   const el = document.getElementById('catList');
   el.innerHTML = state.categories.map(c => {
     const customImg = state.catCustomIcons && state.catCustomIcons[c];
-    let iconHtml;
-    if (customImg) {
-      iconHtml = `<img src="${customImg}" style="width:18px;height:18px;border-radius:4px;object-fit:cover;vertical-align:middle;"/>`;
-    } else {
-      const emojiText = state.catEmojiIcons && state.catEmojiIcons[c];
-      iconHtml = emojiText || CAT_ICONS[c] || '📌';
-    }
+    const iconHtml = customImg
+      ? `<img src="${customImg}" style="width:18px;height:18px;border-radius:4px;object-fit:cover;vertical-align:middle;"/>`
+      : (CAT_ICONS[c] || '📌');
     return `
     <div class="cat-chip">
       ${iconHtml} ${c}
@@ -1519,18 +1293,6 @@ function renderCategories() {
 }
 
 let catIconData = null;
-let catEmojiText = null;
-
-function updateEmojiFromText(val) {
-  catEmojiText = val.trim() || null;
-  // clear image if user typed emoji
-  if (catEmojiText) {
-    catIconData = null;
-    document.getElementById('catIconEmoji').textContent = catEmojiText;
-    document.getElementById('catIconEmoji').style.display = '';
-    document.getElementById('catIconImgPreview').style.display = 'none';
-  }
-}
 
 function previewCatIcon(e) {
   const file = e.target.files[0];
@@ -1538,8 +1300,6 @@ function previewCatIcon(e) {
   const reader = new FileReader();
   reader.onload = ev => {
     catIconData = ev.target.result;
-    catEmojiText = null;
-    document.getElementById('catIconEmojiInput').value = '';
     document.getElementById('catIconEmoji').style.display = 'none';
     const img = document.getElementById('catIconImgPreview');
     img.src = catIconData;
@@ -1556,19 +1316,13 @@ function addCategory() {
   if (catIconData) {
     if (!state.catCustomIcons) state.catCustomIcons = {};
     state.catCustomIcons[val] = catIconData;
-  } else if (catEmojiText) {
-    if (!state.catEmojiIcons) state.catEmojiIcons = {};
-    state.catEmojiIcons[val] = catEmojiText;
   }
   // reset
   document.getElementById('newCatInput').value = '';
   document.getElementById('catIconInput').value = '';
-  document.getElementById('catIconEmojiInput').value = '';
-  document.getElementById('catIconEmoji').textContent = '🖼️';
   document.getElementById('catIconEmoji').style.display = '';
   document.getElementById('catIconImgPreview').style.display = 'none';
   catIconData = null;
-  catEmojiText = null;
   save(); renderAll();
 }
 
@@ -1601,15 +1355,13 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const idx = ['home','add','transfer','history','stats','budget','goals','installments','settings'].indexOf(name);
-  if (idx >= 0) document.querySelectorAll('.tab')[idx].classList.add('active');
+  const idx = ['home','add','transfer','history','stats','installments','settings'].indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
   if (name==='stats') renderStats();
   if (name==='history') renderHistory();
   if (name==='transfer') { updateTransferUI(); renderTransferList(); }
   if (name==='installments') renderInstallments();
-  if (name==='settings') { loadBankFeeSettingsUI(); loadPinSettingUI(); }
-  if (name==='budget') { populateBudgetCatSelect(); renderBudgets(); }
-  if (name==='goals') renderGoals();
+  if (name==='settings') loadBankFeeSettingsUI();
 }
 
 // ==================== TRANSFERS ====================
@@ -1744,26 +1496,21 @@ function deleteTransfer(transferId) {
 
 // ==================== GOOGLE DRIVE ====================
 const CLIENT_ID = '813333077586-79tfs08h2olmjnbgmj6oj3a6srhe25br.apps.googleusercontent.com';
-const API_KEY   = 'AIzaSyB_HPgUOSzhK72pdcf2W3MU9HaUXRAv7f4';
-const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-const SCOPES    = 'https://www.googleapis.com/auth/drive.file';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'mahfazati_data.json';
 
 let tokenClient;
 let gapiInited = false;
-let gisInited  = false;
+let gisInited = false;
 let autoSyncInterval = null;
-let isSyncing  = false;
+let isSyncing = false;
 
 function gapiLoaded() {
   gapi.load('client', initGapiClient);
 }
 
 async function initGapiClient() {
-  await gapi.client.init({
-    apiKey: API_KEY,
-    discoveryDocs: [DISCOVERY_DOC]
-  });
+  await gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
   gapiInited = true;
   maybeEnableDrive();
 }
@@ -1773,13 +1520,15 @@ function gisLoaded() {
     client_id: CLIENT_ID,
     scope: SCOPES,
     callback: async (resp) => {
-      if (resp.error) { showToast('فشل تسجيل الدخول: ' + resp.error); return; }
+      if (resp.error) { showToast('فشل تسجيل الدخول'); return; }
+      // حفظ وقت انتهاء الـ token
       const expiresAt = Date.now() + (resp.expires_in * 1000);
       localStorage.setItem('mahfazati_token_expiry', expiresAt);
       state.driveConnected = true;
       updateDriveUI();
       await loadFromDrive();
       save();
+      startAutoSync();
     }
   });
   gisInited = true;
@@ -1788,33 +1537,30 @@ function gisLoaded() {
 
 function maybeEnableDrive() {
   if (gapiInited && gisInited && state.driveConnected) {
+    // لو الاتنين جاهزين والمستخدم كان متصل قبل كده، نجدد الـ token تلقائياً
     silentTokenRefresh();
   }
 }
 
+// تجديد الـ token بدون popup لو المستخدم كان متصل قبل كده
 function silentTokenRefresh() {
   if (!tokenClient) return;
-  tokenClient.requestAccessToken({ prompt: '' });
+  tokenClient.requestAccessToken({ prompt: '' }); // prompt فاضي = silent
 }
 
 function toggleDrive() {
   if (!gapiInited || !gisInited) {
-    showToast('⏳ جاري تحميل Google Drive...');
+    showToast('جاري تحميل Google Drive...');
     loadGoogleAPIs();
-    // بعد تحميل الـ APIs، لو المستخدم كان مش متصل نفتح popup
-    setTimeout(() => {
-      if (gapiInited && gisInited && !state.driveConnected) {
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-      }
-    }, 3000);
     return;
   }
   if (state.driveConnected) {
-    try { google.accounts.oauth2.revoke(gapi.client.getToken()?.access_token, ()=>{}); } catch(e){}
+    google.accounts.oauth2.revoke(gapi.client.getToken()?.access_token, ()=>{});
     gapi.client.setToken(null);
     state.driveConnected = false;
     state.driveFileId = null;
     localStorage.removeItem('mahfazati_token_expiry');
+    stopAutoSync();
     save();
     updateDriveUI();
     showToast('تم قطع الاتصال بـ Drive');
@@ -1840,96 +1586,90 @@ function loadGoogleAPIs() {
   }
 }
 
-// ---- Auto-sync معطل — المستخدم بيتحكم يدوياً ----
-function startAutoSync() { /* معطل عمداً */ }
+// ---- Auto-sync كل دقيقة ----
+function startAutoSync() {
+  stopAutoSync();
+  // pull من Drive كل 60 ثانية لو التطبيق مفتوح في أكتر من مكان
+  autoSyncInterval = setInterval(async () => {
+    if (state.driveConnected && gapiInited && !isSyncing) {
+      await pullFromDrive();
+    }
+  }, 60000);
+}
+
 function stopAutoSync() {
   if (autoSyncInterval) { clearInterval(autoSyncInterval); autoSyncInterval = null; }
 }
 
-// ---- دالة مساعدة: جلب ملف Drive ----
-async function fetchRemoteState() {
-  const res = await gapi.client.drive.files.list({
-    q: `name='${FILE_NAME}' and trashed=false`,
-    fields: 'files(id,name,modifiedTime)',
-    pageSize: 1
-  });
-  const files = res.result.files;
-  if (!files || !files.length) return null;
-  state.driveFileId = files[0].id;
-  const content = await gapi.client.drive.files.get({ fileId: state.driveFileId, alt: 'media' });
-  return typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
+// Pull الداتا من Drive وقارنها بالـ local — لو في حاجة جديدة خد منها
+async function pullFromDrive() {
+  if (isSyncing) return;
+  isSyncing = true;
+  try {
+    const res = await gapi.client.drive.files.list({
+      q: `name='${FILE_NAME}' and trashed=false`,
+      fields: 'files(id,name,modifiedTime)',
+      pageSize: 1
+    });
+    const files = res.result.files;
+    if (files && files.length > 0) {
+      const remoteModified = new Date(files[0].modifiedTime).getTime();
+      const localModified = state.lastSaved || 0;
+      // لو Drive أحدث من الـ local، اجيب منه
+      if (remoteModified > localModified) {
+        state.driveFileId = files[0].id;
+        const content = await gapi.client.drive.files.get({ fileId: state.driveFileId, alt: 'media' });
+        const remote = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
+        Object.assign(state, remote);
+        renderAll();
+        showToast('🔄 تم تحديث البيانات من Drive');
+      }
+    }
+  } catch(e) { console.warn('Drive pull error', e); }
+  finally { isSyncing = false; }
 }
 
-// ---- رفع الداتا المحلية على Drive (استبدال كامل) ----
 async function syncDrive() {
   if (!state.driveConnected || !gapiInited || isSyncing) return;
   isSyncing = true;
   try {
-    state.lastSaved = Date.now();
-    saveTextState();
+    state.lastSaved = Date.now(); // timestamp للمقارنة عند الـ pull
     const data = JSON.stringify(state);
-    if (!state.driveFileId) {
-      // ابحث عن الملف أولاً
-      try {
-        const res = await gapi.client.drive.files.list({
-          q: `name='${FILE_NAME}' and trashed=false`, fields: 'files(id)', pageSize: 1
-        });
-        if (res.result.files && res.result.files.length) state.driveFileId = res.result.files[0].id;
-      } catch(e) {}
-    }
     if (state.driveFileId) {
       await gapi.client.request({
         path: `https://www.googleapis.com/upload/drive/v3/files/${state.driveFileId}`,
-        method: 'PATCH', params: { uploadType: 'media' }, body: data
+        method: 'PATCH',
+        params: { uploadType: 'media' },
+        body: data
       });
     } else {
       const meta = await gapi.client.drive.files.create({ resource: { name: FILE_NAME }, fields: 'id' });
       state.driveFileId = meta.result.id;
       await gapi.client.request({
         path: `https://www.googleapis.com/upload/drive/v3/files/${state.driveFileId}`,
-        method: 'PATCH', params: { uploadType: 'media' }, body: data
+        method: 'PATCH',
+        params: { uploadType: 'media' },
+        body: data
       });
+      localStorage.setItem('mahfazati_v2', JSON.stringify(state));
     }
   } catch(e) { console.warn('Drive sync error', e); }
   finally { isSyncing = false; }
 }
 
-// ---- جلب داتا Drive واستبدال المحلية بيها ----
-async function pullFromDrive() {
-  if (isSyncing) return;
-  isSyncing = true;
-  try {
-    const remote = await fetchRemoteState();
-    if (!remote) { isSyncing = false; return; }
-    // استبدال كامل — الـ Drive هو المرجع
-    const keepConnected = state.driveConnected;
-    const keepFileId = state.driveFileId;
-    Object.assign(state, remote);
-    state.driveConnected = keepConnected;
-    state.driveFileId = keepFileId;
-    saveTextState();
-    renderAll();
-    showToast('📥 تم تحميل البيانات من Drive');
-  } catch(e) { console.warn('Drive pull error', e); }
-  finally { isSyncing = false; }
-}
-
 async function loadFromDrive() {
   try {
-    const remote = await fetchRemoteState();
-    if (remote) {
-      const keepConnected = state.driveConnected;
-      const keepFileId = state.driveFileId;
+    const res = await gapi.client.drive.files.list({ q: `name='${FILE_NAME}' and trashed=false`, fields: 'files(id,name)', pageSize: 1 });
+    const files = res.result.files;
+    if (files && files.length > 0) {
+      state.driveFileId = files[0].id;
+      const content = await gapi.client.drive.files.get({ fileId: state.driveFileId, alt: 'media' });
+      const remote = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
       Object.assign(state, remote);
-      state.driveConnected = keepConnected;
-      state.driveFileId = keepFileId;
-      saveTextState();
       renderAll();
-      showToast('✅ تم تحميل البيانات من Drive');
+      showToast('تم تحميل البيانات من Drive ✓');
     } else {
-      // مفيش ملف على Drive → ارفع اللي عندنا
-      await syncDrive();
-      showToast('☁️ تم رفع بياناتك على Drive');
+      showToast('ملف جديد سيتم إنشاؤه في Drive');
     }
   } catch(e) { console.warn('Drive load error', e); }
 }
@@ -2317,300 +2057,6 @@ function deleteInstallment(id) {
 }
 
 function closeInstModal() { document.getElementById('instDetailModal').classList.remove('open'); }
-
-// ==================== PIN LOCK ====================
-let pinBuffer = '';
-let pinMode = 'unlock'; // 'unlock' | 'setup'
-
-function initPinLock() {
-  const pin = localStorage.getItem('mahfazati_pin');
-  if (pin) {
-    pinMode = 'unlock';
-    document.getElementById('pinTitle').textContent = 'أدخل رمز PIN';
-    document.getElementById('pinLockScreen').style.display = 'flex';
-  }
-}
-
-function pinPress(d) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += d;
-  updatePinDots();
-  if (pinBuffer.length === 4) {
-    setTimeout(() => {
-      if (pinMode === 'unlock') {
-        const stored = localStorage.getItem('mahfazati_pin');
-        if (pinBuffer === stored) {
-          document.getElementById('pinLockScreen').style.display = 'none';
-          pinBuffer = '';
-          updatePinDots();
-        } else {
-          document.getElementById('pinError').textContent = '❌ رمز PIN خاطئ';
-          pinBuffer = '';
-          updatePinDots();
-          setTimeout(() => document.getElementById('pinError').textContent = '', 1500);
-        }
-      }
-    }, 100);
-  }
-}
-
-function pinDel() {
-  pinBuffer = pinBuffer.slice(0, -1);
-  updatePinDots();
-}
-
-function updatePinDots() {
-  for (let i = 0; i < 4; i++) {
-    document.getElementById('d'+i).classList.toggle('filled', i < pinBuffer.length);
-  }
-}
-
-function savePinSetting() {
-  const p1 = document.getElementById('pinNewInput').value;
-  const p2 = document.getElementById('pinConfirmInput').value;
-  if (p1.length !== 4 || !/^\d{4}$/.test(p1)) return showToast('أدخل 4 أرقام بالظبط');
-  if (p1 !== p2) return showToast('الرمزان غير متطابقين');
-  localStorage.setItem('mahfazati_pin', p1);
-  document.getElementById('pinNewInput').value = '';
-  document.getElementById('pinConfirmInput').value = '';
-  loadPinSettingUI();
-  showToast('✅ تم حفظ رمز PIN');
-}
-
-function removePinSetting() {
-  if (!confirm('إزالة قفل PIN؟')) return;
-  localStorage.removeItem('mahfazati_pin');
-  loadPinSettingUI();
-  showToast('تم إزالة PIN');
-}
-
-function loadPinSettingUI() {
-  const has = !!localStorage.getItem('mahfazati_pin');
-  document.getElementById('pinCurrentStatus').textContent = has ? '✅ PIN مفعّل حالياً' : '🔓 لا يوجد قفل PIN';
-  document.getElementById('pinCurrentStatus').style.color = has ? 'var(--accent3)' : 'var(--text2)';
-  document.getElementById('removePinBtn').style.display = has ? '' : 'none';
-  document.getElementById('pinNewLabel').textContent = has ? 'تغيير رمز PIN' : 'رمز PIN جديد (4 أرقام)';
-}
-
-// ==================== MANUAL SYNC (BACKUP) ====================
-async function manualSync() {
-  const icon = document.getElementById('syncIcon');
-  icon.style.animation = 'spin 1s linear infinite';
-  if (state.driveConnected && gapiInited) {
-    showToast('⏳ جاري الرفع على Drive...');
-    try {
-      await syncDrive();
-      showToast('✅ تم رفع بياناتك على Drive!');
-    } catch(e) {
-      showToast('❌ فشل الرفع على Drive');
-    }
-  } else {
-    await loadFromStorage();
-    renderAll();
-    showToast('🔄 تم تحديث البيانات المحلية');
-  }
-  setTimeout(() => { icon.style.animation = ''; }, 800);
-}
-
-async function pullFromDriveManual() {
-  if (!state.driveConnected || !gapiInited) return showToast('وصّل Drive الأول');
-  showToast('⏳ جاري التحميل من Drive...');
-  await pullFromDrive();
-  showToast('✅ تم تحميل أحدث بيانات من Drive');
-}
-
-// ==================== BUDGET PLANNING ====================
-function populateBudgetCatSelect() {
-  const sel = document.getElementById('budgetCat');
-  if (!sel) return;
-  sel.innerHTML = state.categories.map(c => `<option value="${c}">${getCatDisplay(c)} ${c}</option>`).join('');
-}
-
-function saveBudget() {
-  const cat = document.getElementById('budgetCat').value;
-  const amount = parseFloat(document.getElementById('budgetAmount').value);
-  const warnPct = parseInt(document.getElementById('budgetWarnPct').value) || 80;
-  if (!cat) return showToast('اختار فئة');
-  if (!amount || amount <= 0) return showToast('أدخل مبلغاً صحيحاً');
-  if (!state.budgets) state.budgets = {};
-  state.budgets[cat] = { amount, warnPct };
-  save();
-  renderBudgets();
-  checkBudgetNotifications();
-  showToast(`✅ تم حفظ ميزانية "${cat}"`);
-  document.getElementById('budgetAmount').value = '';
-}
-
-function renderBudgets() {
-  const el = document.getElementById('budgetList');
-  if (!el) return;
-  if (!state.budgets || !Object.keys(state.budgets).length) {
-    el.innerHTML = '<div class="empty"><i class="fas fa-wallet"></i>لا توجد ميزانيات بعد</div>';
-    return;
-  }
-  // حساب المصاريف الشهرية الحالية لكل فئة
-  const now = new Date();
-  const monthTxs = state.transactions.filter(tx => {
-    const d = new Date(tx.date);
-    return tx.type === 'expense' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
-  const catSpend = {};
-  monthTxs.forEach(tx => { catSpend[tx.category] = (catSpend[tx.category]||0) + tx.amount; });
-
-  el.innerHTML = Object.entries(state.budgets).map(([cat, b]) => {
-    const spent = catSpend[cat] || 0;
-    const pct = Math.min((spent / b.amount) * 100, 100);
-    const over = spent > b.amount;
-    const near = !over && pct >= b.warnPct;
-    const colorClass = over ? 'budget-warn' : near ? 'budget-near' : 'budget-ok';
-    return `
-      <div class="budget-bar-wrap">
-        <div class="budget-bar-header">
-          <span style="font-weight:700;font-size:0.9rem;">${getCatDisplay(cat)} ${cat}</span>
-          <span style="font-size:0.8rem;color:${over?'var(--accent2)':near?'var(--accent4)':'var(--text2)'};">${fmt(spent)} / ${fmt(b.amount)}</span>
-        </div>
-        <div class="budget-bar-track">
-          <div class="budget-bar-fill ${colorClass}" style="width:${pct.toFixed(1)}%"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
-          <span style="font-size:0.72rem;color:var(--text2);">${over?'⚠️ تجاوزت الميزانية':near?'⚡ اقتربت من الحد':''}</span>
-          <button class="btn btn-sm btn-danger" onclick="deleteBudget('${cat}')"><i class="fas fa-trash"></i></button>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function deleteBudget(cat) {
-  delete state.budgets[cat];
-  save(); renderBudgets();
-  showToast('تم الحذف');
-}
-
-function checkBudgetNotifications() {
-  if (!state.budgets) return;
-  const now = new Date();
-  const monthTxs = state.transactions.filter(tx => {
-    const d = new Date(tx.date);
-    return tx.type === 'expense' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
-  const catSpend = {};
-  monthTxs.forEach(tx => { catSpend[tx.category] = (catSpend[tx.category]||0) + tx.amount; });
-  Object.entries(state.budgets).forEach(([cat, b]) => {
-    const spent = catSpend[cat] || 0;
-    const pct = (spent / b.amount) * 100;
-    if (spent > b.amount) showToast(`⚠️ تجاوزت ميزانية "${cat}"!`);
-    else if (pct >= b.warnPct) showToast(`⚡ اقتربت من حد ميزانية "${cat}" (${pct.toFixed(0)}%)`);
-  });
-}
-
-// ==================== GOALS / SAVING TRACKER ====================
-function calcGoal() {
-  const target = parseFloat(document.getElementById('goalTarget').value) || 0;
-  const saved  = parseFloat(document.getElementById('goalSaved').value)  || 0;
-  const deadline = document.getElementById('goalDeadline').value;
-  const box = document.getElementById('goalCalcBox');
-  if (target > 0 && deadline) {
-    const remaining = Math.max(target - saved, 0);
-    const now = new Date(); now.setHours(0,0,0,0);
-    const end = new Date(deadline);
-    const days = Math.max(Math.ceil((end - now) / (1000*60*60*24)), 1);
-    const daily   = remaining / days;
-    const monthly = (remaining / days) * 30;
-    box.style.display = 'block';
-    document.getElementById('goalDaily').textContent     = fmt(daily);
-    document.getElementById('goalMonthly').textContent   = fmt(monthly);
-    document.getElementById('goalDays').textContent      = days + ' يوم';
-    document.getElementById('goalRemaining').textContent = fmt(remaining);
-  } else {
-    box.style.display = 'none';
-  }
-}
-
-function saveGoal() {
-  const name     = document.getElementById('goalName').value.trim();
-  const target   = parseFloat(document.getElementById('goalTarget').value);
-  const saved    = parseFloat(document.getElementById('goalSaved').value) || 0;
-  const deadline = document.getElementById('goalDeadline').value;
-  const wallet   = document.getElementById('goalWallet').value;
-  if (!name) return showToast('أدخل اسم الهدف');
-  if (!target || target <= 0) return showToast('أدخل المبلغ المستهدف');
-  if (!deadline) return showToast('أدخل الموعد النهائي');
-  if (!state.goals) state.goals = [];
-  state.goals.push({ id: Date.now().toString(), name, target, saved, deadline, wallet, createdAt: new Date().toISOString() });
-  save(); renderGoals();
-  showToast(`✅ تم حفظ الهدف "${name}"`);
-  document.getElementById('goalName').value = '';
-  document.getElementById('goalTarget').value = '';
-  document.getElementById('goalSaved').value = '';
-  document.getElementById('goalDeadline').value = '';
-  document.getElementById('goalCalcBox').style.display = 'none';
-}
-
-function addToGoal(id) {
-  const goal = (state.goals||[]).find(g=>g.id===id);
-  if (!goal) return;
-  const amt = parseFloat(prompt('كام عايز تضيف للهدف ده؟ (بالجنيه)'));
-  if (!amt || amt <= 0) return;
-  goal.saved = (goal.saved||0) + amt;
-  if (goal.saved >= goal.target) showToast(`🎉 وصلت للهدف "${goal.name}"!`);
-  else showToast(`✅ تم إضافة ${fmt(amt)} للهدف`);
-  save(); renderGoals();
-}
-
-function deleteGoal(id) {
-  if (!confirm('حذف هذا الهدف؟')) return;
-  state.goals = (state.goals||[]).filter(g=>g.id!==id);
-  save(); renderGoals();
-  showToast('تم الحذف');
-}
-
-function renderGoals() {
-  const el = document.getElementById('goalsList');
-  if (!el) return;
-  if (!state.goals || !state.goals.length) {
-    el.innerHTML = '<div class="empty"><i class="fas fa-bullseye"></i>لا توجد أهداف بعد</div>';
-    return;
-  }
-  const now = new Date(); now.setHours(0,0,0,0);
-  el.innerHTML = (state.goals).map(goal => {
-    const pct = Math.min(((goal.saved||0)/goal.target)*100, 100);
-    const remaining = Math.max(goal.target - (goal.saved||0), 0);
-    const end = new Date(goal.deadline);
-    const days = Math.max(Math.ceil((end - now)/(1000*60*60*24)), 0);
-    const daily   = days > 0 ? remaining/days : 0;
-    const monthly = daily * 30;
-    const w = WALLETS[goal.wallet] || { icon:'🐷', name: goal.wallet };
-    const done = (goal.saved||0) >= goal.target;
-    return `
-      <div class="goal-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-weight:800;font-size:1rem;">${done?'🏆':''} ${goal.name}</div>
-            <div style="font-size:0.75rem;color:var(--text2);margin-top:2px;">${w.icon} ${w.name} · ${new Date(goal.deadline).toLocaleDateString('ar-EG')}</div>
-          </div>
-          <button class="btn btn-sm btn-danger" onclick="deleteGoal('${goal.id}')"><i class="fas fa-trash"></i></button>
-        </div>
-        <div class="goal-progress-wrap">
-          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text2);margin-bottom:4px;">
-            <span>المدخر: ${fmt(goal.saved||0)}</span>
-            <span>الهدف: ${fmt(goal.target)}</span>
-          </div>
-          <div class="goal-bar-track">
-            <div class="goal-bar-fill" style="width:${pct.toFixed(1)}%;background:${done?'var(--accent3)':'var(--accent)'};"></div>
-          </div>
-          <div style="font-size:0.72rem;color:var(--text2);margin-top:4px;">${pct.toFixed(0)}% · ${days} يوم متبقي</div>
-        </div>
-        ${!done ? `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;font-size:0.78rem;background:var(--bg);border-radius:10px;padding:10px;text-align:center;">
-          <div><div style="color:var(--text2);">يومياً</div><div style="font-weight:800;color:var(--accent);">${fmt(daily)}</div></div>
-          <div><div style="color:var(--text2);">شهرياً</div><div style="font-weight:800;color:var(--accent3);">${fmt(monthly)}</div></div>
-        </div>
-        <button class="btn btn-success btn-full" style="margin-top:8px;" onclick="addToGoal('${goal.id}')"><i class="fas fa-plus"></i> إضافة ادخار</button>
-        ` : '<div style="text-align:center;color:var(--accent3);font-weight:800;margin-top:8px;">🎉 تم تحقيق الهدف!</div>'}
-      </div>`;
-  }).join('');
-}
-
 </script>
 </body>
 </html>
