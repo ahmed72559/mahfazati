@@ -1744,21 +1744,26 @@ function deleteTransfer(transferId) {
 
 // ==================== GOOGLE DRIVE ====================
 const CLIENT_ID = '813333077586-79tfs08h2olmjnbgmj6oj3a6srhe25br.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const API_KEY   = 'AIzaSyB_HPgUOSzhK72pdcf2W3MU9HaUXRAv7f4';
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const SCOPES    = 'https://www.googleapis.com/auth/drive.file';
 const FILE_NAME = 'mahfazati_data.json';
 
 let tokenClient;
 let gapiInited = false;
-let gisInited = false;
+let gisInited  = false;
 let autoSyncInterval = null;
-let isSyncing = false;
+let isSyncing  = false;
 
 function gapiLoaded() {
   gapi.load('client', initGapiClient);
 }
 
 async function initGapiClient() {
-  await gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
+  await gapi.client.init({
+    apiKey: API_KEY,
+    discoveryDocs: [DISCOVERY_DOC]
+  });
   gapiInited = true;
   maybeEnableDrive();
 }
@@ -1768,8 +1773,7 @@ function gisLoaded() {
     client_id: CLIENT_ID,
     scope: SCOPES,
     callback: async (resp) => {
-      if (resp.error) { showToast('فشل تسجيل الدخول'); return; }
-      // حفظ وقت انتهاء الـ token
+      if (resp.error) { showToast('فشل تسجيل الدخول: ' + resp.error); return; }
       const expiresAt = Date.now() + (resp.expires_in * 1000);
       localStorage.setItem('mahfazati_token_expiry', expiresAt);
       state.driveConnected = true;
@@ -1784,30 +1788,33 @@ function gisLoaded() {
 
 function maybeEnableDrive() {
   if (gapiInited && gisInited && state.driveConnected) {
-    // لو الاتنين جاهزين والمستخدم كان متصل قبل كده، نجدد الـ token تلقائياً
     silentTokenRefresh();
   }
 }
 
-// تجديد الـ token بدون popup لو المستخدم كان متصل قبل كده
 function silentTokenRefresh() {
   if (!tokenClient) return;
-  tokenClient.requestAccessToken({ prompt: '' }); // prompt فاضي = silent
+  tokenClient.requestAccessToken({ prompt: '' });
 }
 
 function toggleDrive() {
   if (!gapiInited || !gisInited) {
-    showToast('جاري تحميل Google Drive...');
+    showToast('⏳ جاري تحميل Google Drive...');
     loadGoogleAPIs();
+    // بعد تحميل الـ APIs، لو المستخدم كان مش متصل نفتح popup
+    setTimeout(() => {
+      if (gapiInited && gisInited && !state.driveConnected) {
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+      }
+    }, 3000);
     return;
   }
   if (state.driveConnected) {
-    google.accounts.oauth2.revoke(gapi.client.getToken()?.access_token, ()=>{});
+    try { google.accounts.oauth2.revoke(gapi.client.getToken()?.access_token, ()=>{}); } catch(e){}
     gapi.client.setToken(null);
     state.driveConnected = false;
     state.driveFileId = null;
     localStorage.removeItem('mahfazati_token_expiry');
-    stopAutoSync();
     save();
     updateDriveUI();
     showToast('تم قطع الاتصال بـ Drive');
