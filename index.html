@@ -1836,29 +1836,82 @@ function stopAutoSync() {
   if (autoSyncInterval) { clearInterval(autoSyncInterval); autoSyncInterval = null; }
 }
 
-// Pull الداتا من Drive وقارنها بالـ local — لو في حاجة جديدة خد منها
+// ---- دمج الداتا بالـ ID بدل الاستبدال ----
+function mergeStates(local, remote) {
+  // transactions: union by id — كل عملية موجودة في أي من الجهازين تتحفظ
+  const txMap = {};
+  (local.transactions || []).forEach(t => { txMap[t.id] = t; });
+  (remote.transactions || []).forEach(t => {
+    if (!txMap[t.id]) txMap[t.id] = t; // جديدة من الجهاز التاني → أضفها
+    // لو موجودة في الاتنين → خلي النسخة المحلية (المستخدم حذفها محلياً مثلاً)
+  });
+  const mergedTxs = Object.values(txMap).sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date));
+
+  // installments: نفس المنطق
+  const instMap = {};
+  (local.installments || []).forEach(i => { instMap[i.id] = i; });
+  (remote.installments || []).forEach(i => { if (!instMap[i.id]) instMap[i.id] = i; });
+
+  // goals: نفس المنطق
+  const goalMap = {};
+  (local.goals || []).forEach(g => { goalMap[g.id] = g; });
+  (remote.goals || []).forEach(g => { if (!goalMap[g.id]) goalMap[g.id] = g; });
+
+  // balances: خد الأكبر لكل محفظة (الأحدث غالباً أعلى)
+  const mergedBalances = { ...remote.balances };
+  Object.entries(local.balances || {}).forEach(([k, v]) => {
+    // لو الـ local أحدث timestamp، خد أرصدته
+    if ((local.lastSaved || 0) >= (remote.lastSaved || 0)) {
+      mergedBalances[k] = v;
+    }
+  });
+
+  return {
+    ...remote,
+    ...local,
+    transactions: mergedTxs,
+    installments: Object.values(instMap),
+    goals: Object.values(goalMap),
+    balances: mergedBalances,
+    // categories: دمج بدون تكرار
+    categories: [...new Set([...(local.categories || []), ...(remote.categories || [])])],
+    catCustomIcons: { ...(remote.catCustomIcons || {}), ...(local.catCustomIcons || {}) },
+    catEmojiIcons:  { ...(remote.catEmojiIcons  || {}), ...(local.catEmojiIcons  || {}) },
+    budgets: { ...(remote.budgets || {}), ...(local.budgets || {}) },
+    lastSaved: Date.now()
+  };
+}
+
+async function fetchRemoteState() {
+  const res = await gapi.client.drive.files.list({
+    q: `name='${FILE_NAME}' and trashed=false`,
+    fields: 'files(id,name,modifiedTime)',
+    pageSize: 1
+  });
+  const files = res.result.files;
+  if (!files || !files.length) return null;
+  const fileId = files[0].id;
+  state.driveFileId = fileId;
+  const content = await gapi.client.drive.files.get({ fileId, alt: 'media' });
+  const remote = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
+  return remote;
+}
+
 async function pullFromDrive() {
   if (isSyncing) return;
   isSyncing = true;
   try {
-    const res = await gapi.client.drive.files.list({
-      q: `name='${FILE_NAME}' and trashed=false`,
-      fields: 'files(id,name,modifiedTime)',
-      pageSize: 1
-    });
-    const files = res.result.files;
-    if (files && files.length > 0) {
-      const remoteModified = new Date(files[0].modifiedTime).getTime();
-      const localModified = state.lastSaved || 0;
-      // لو Drive أحدث من الـ local، اجيب منه
-      if (remoteModified > localModified) {
-        state.driveFileId = files[0].id;
-        const content = await gapi.client.drive.files.get({ fileId: state.driveFileId, alt: 'media' });
-        const remote = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
-        Object.assign(state, remote);
-        renderAll();
-        showToast('🔄 تم تحديث البيانات من Drive');
-      }
+    const remote = await fetchRemoteState();
+    if (!remote) { isSyncing = false; return; }
+    const remoteTime = remote.lastSaved || 0;
+    const localTime  = state.lastSaved  || 0;
+    // لو Drive فيه حاجة أحدث → ادمج
+    if (remoteTime > localTime) {
+      const merged = mergeStates(state, remote);
+      Object.assign(state, merged);
+      saveTextState();
+      renderAll();
+      showToast('🔄 تم دمج البيانات من Drive');
     }
   } catch(e) { console.warn('Drive pull error', e); }
   finally { isSyncing = false; }
@@ -1868,8 +1921,17 @@ async function syncDrive() {
   if (!state.driveConnected || !gapiInited || isSyncing) return;
   isSyncing = true;
   try {
-    state.lastSaved = Date.now(); // timestamp للمقارنة عند الـ pull
+    // أول حاجة: اجلب الـ remote وادمجه مع الـ local
+    let remote = null;
+    try { remote = await fetchRemoteState(); } catch(e) {}
+    if (remote) {
+      const merged = mergeStates(state, remote);
+      Object.assign(state, merged);
+      saveTextState();
+    }
+    state.lastSaved = Date.now();
     const data = JSON.stringify(state);
+
     if (state.driveFileId) {
       await gapi.client.request({
         path: `https://www.googleapis.com/upload/drive/v3/files/${state.driveFileId}`,
@@ -1886,23 +1948,23 @@ async function syncDrive() {
         params: { uploadType: 'media' },
         body: data
       });
-      localStorage.setItem('mahfazati_v2', JSON.stringify(state));
     }
+    saveTextState();
+    renderAll();
   } catch(e) { console.warn('Drive sync error', e); }
   finally { isSyncing = false; }
 }
 
 async function loadFromDrive() {
   try {
-    const res = await gapi.client.drive.files.list({ q: `name='${FILE_NAME}' and trashed=false`, fields: 'files(id,name)', pageSize: 1 });
-    const files = res.result.files;
-    if (files && files.length > 0) {
-      state.driveFileId = files[0].id;
-      const content = await gapi.client.drive.files.get({ fileId: state.driveFileId, alt: 'media' });
-      const remote = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
-      Object.assign(state, remote);
+    const remote = await fetchRemoteState();
+    if (remote) {
+      const merged = mergeStates(state, remote);
+      Object.assign(state, merged);
+      state.lastSaved = Date.now();
+      saveTextState();
       renderAll();
-      showToast('تم تحميل البيانات من Drive ✓');
+      showToast('✅ تم دمج البيانات من Drive');
     } else {
       showToast('ملف جديد سيتم إنشاؤه في Drive');
     }
@@ -2372,19 +2434,17 @@ async function manualSync() {
   const icon = document.getElementById('syncIcon');
   icon.style.animation = 'spin 1s linear infinite';
   if (state.driveConnected && gapiInited) {
-    showToast('⏳ جاري المزامنة مع Drive...');
+    showToast('⏳ جاري دمج البيانات...');
     try {
-      await pullFromDrive();
-      await syncDrive();
-      showToast('✅ تمت المزامنة والـ Backup بنجاح!');
+      await syncDrive(); // syncDrive دلوقتي بيعمل merge+push في خطوة واحدة
+      showToast('✅ تم الدمج والـ Backup بنجاح!');
     } catch(e) {
       showToast('❌ فشلت المزامنة');
     }
   } else {
-    // بدون Drive: refresh محلي
     await loadFromStorage();
     renderAll();
-    showToast('🔄 تم تحديث البيانات');
+    showToast('🔄 تم تحديث البيانات المحلية');
   }
   setTimeout(() => { icon.style.animation = ''; }, 800);
 }
